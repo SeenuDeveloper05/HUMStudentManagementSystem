@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HumSMS Login</title>
+
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .hum-login-image {
+            max-width: 650px;
+            height: 100vh;
+            object-fit: cover;
+            border-radius: 0 10px 10px 0;
+            opacity: 75%;
+        }
+
+        .hum-login-form {
+            height: 100vh;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+        }
+
+        .hum-login-content {
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .hum-login-logo {
+            width: 84px;
+            height: 84px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+            background: #1769ed;
+            color: #ffffff;
+            border-radius: 10px;
+            font-size: 34px;
+        }
+
+        .hum-login-heading {
+            color: #15365f;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .hum-welcome {
+            color: #12345b;
+            font-family: 'Playfair Display', serif;
+            font-size: 25px;
+        }
+
+        .hum-login-input {
+            height: 37px;
+            font-size: 12px;
+        }
+
+        .hum-login-button {
+            height: 44px;
+            background: #194b84;
+            color: white;
+            border-radius: 9px;
+        }
+
+        .hum-login-button:hover {
+            background: #123b6d;
+            color: white;
+        }
+
+        .hum-eye-style {
+            border: 1px solid lightgray;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .hum-user-input-icon {
+            height: 37px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+
+            <!-- Left: Full-screen college image -->
+            <div class="col-md-5">
+                <img src="./src/public/assets/clg.jpeg" alt="College Campus" class="hum-login-image">
+            </div>
+
+            <!-- Right: Login form -->
+            <div class="col-md-7  hum-login-form">
+
+                <div class="hum-login-content text-center mx-3">
+
+                    <!-- Existing graduation-cap logo design -->
+                    <div class="hum-login-logo">
+                        <span class="material-symbols-outlined" style="font-size: 50px;"> school</span>
+                    </div>
+
+                    <h1 class="hum-login-heading mb-1">
+                        Hum School Management System
+                    </h1>
+
+                    <p class="text-secondary small mb-3">
+                        Academic Administration Portal
+                    </p>
+
+                    <h2 class="hum-welcome mb-2">
+                        Welcome Back
+                    </h2>
+
+                    <p class="text-secondary small mb-3">
+                        Sign in to continue to your account
+                    </p>
+
+                    <form id="hum_login_form" class="text-start">
+
+                        <div class="mb-2">
+                            <label for="hum_login_username" class="form-label small fw-semibold">
+                                UserName
+                            </label>
+
+                            <div class="input-group hum-input-border">
+                                <span class="material-symbols-outlined input-group-text bg-white hum-user-input-icon">
+                                    person
+                                </span>
+
+                                <input type="text" id="hum_login_username" name="hum_login_username"
+                                    class="form-control hum-login-input" placeholder="Enter Your Name" required>
+                            </div>
+                        </div>
+
+                        <label for="hum_login_password" class="form-label">
+                            Password
+                        </label>
+
+                        <div class="input-group hum-input-border">
+                            <span class="input-group-text bg-white">
+                                <span class="material-symbols-outlined">lock</span>
+                            </span>
+
+                            <input type="password" class="form-control" id="hum_login_password"
+                                name="hum_login_password" placeholder="Enter password" required>
+
+                            <button type="button" id="hum_toggle_password"
+                                class="d-flex align-items-center hum-eye-style input-group-text">
+                                <span class="material-symbols-outlined">visibility</span>
+                            </button>
+                        </div>
+
+                        <div class="text-end mb-4">
+                            <a href="#forgot-password" class="text-primary text-decoration-none small">
+                                Forgot Password?
+                            </a>
+                        </div>
+
+                        <button type="button" id="hum_login_submit" class="btn hum-login-button w-100">
+                            Sign In <i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- jQuery Validation Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.21.0/dist/jquery.validate.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Login JavaScript -->
+    <script src="./src/public/js/application/hum.login.js"></script>
+
+
+</body>
+
+</html>

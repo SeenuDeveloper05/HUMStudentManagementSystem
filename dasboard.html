@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HumSMS Dashboard</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+        rel="stylesheet">
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+ <!-- data table -->
+<link rel="stylesheet"
+      href="https://cdn.datatables.net/2.3.2/css/dataTables.dataTables.min.css">
+      <link rel="stylesheet" href="./src/public/css/common.css">
+
+      <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css">
+
+    <link rel="stylesheet"
+     href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+   
+</head>
+
+<body>
+    <div id="hum_sms_templates_container" class="d-none"></div>
+
+<div class="d-flex vh-100 overflow-hidden">
+
+    <!-- Sidebar -->
+    <div id="hum_sms_sidebar_layout"></div>
+
+    <!-- Main application area -->
+    <div class="flex-grow-1 d-flex flex-column overflow-hidden"
+         style="min-width: 0;">
+
+        <!-- Header -->
+        <div id="hum_sms_header_layout" class="flex-shrink-0"  ></div>
+
+        <!-- Main content -->
+        <div id="hum_sms_main_layout" ></div>
+
+        <!-- Footer -->
+        <div id="hum_sms_footer_layout" class="flex-shrink-0"></div>
+
+    </div>
+</div>
+
+      <!-- Existing jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+      <!-- jQuery Validation -->
+<script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.21.0/dist/jquery.validate.min.js"></script>
+
+     <!-- Toastr -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <!-- Flatpickr -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <!-- Inputmask -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.9/jquery.inputmask.min.js"></script>
+
+   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- data table -->
+    <script src="https://cdn.datatables.net/2.3.2/js/dataTables.min.js"></script>
+
+    <script src="./src/public/js/layouts/hum.sidebar.js"></script>
+        <!-- Chart -->
+      <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+     <script src="./src/public/js/layouts/hum.dashboard.js"></script>
+    <script  src="./src/public/js/layouts/hum.teacher.management.js"></script>
+    <script src="./src/public/js/layouts/hum.footer.js"></script>
+    <script src="./src/public/js/layouts/hum.navbar.js"></script>
+    <script src="./src/public/js/application/common.js"></script>
+     <script  src="./src/public/js/layouts/hum.holiday.management.js"></script>
+     <script  src="./src/public/js/layouts/hum.daily.attendance.js"></script>
+     <script  src="./src/public/js/layouts/hum.student.management.filterTable.js"></script>
+      <script  src="./src/public/js/layouts/hum.student.management.register.js"></script>
+       <script  src="./src/public/js/layouts/hum.student.management.view.js"></script>
+       <script  src="./src/public/js/layouts/hum.quarterly.attendance.js"></script>
+        <script  src="./src/public/js/layouts/hum.mark.entry.js"></script>
+       <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.css" rel="stylesheet">
+      <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
+
+</body>
+</html>

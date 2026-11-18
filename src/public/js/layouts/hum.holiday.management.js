@@ -1,0 +1,814 @@
+class HumHolidayManagement extends HTMLElement {
+
+    constructor() {
+        super();
+
+        const template = document.getElementById("hum_holiday_management");
+
+        this.appendChild(
+            template.content.cloneNode(true)
+        );
+
+        this.selectors = {
+            holidayManagement: ".hum-holiday-page",
+
+            declareHolidayButton: "#hum_holiday_declare_button",
+            cancelHolidayButton: "#hum_holiday_cancel_button",
+
+            holidayTypeFilter: "#hum_holiday_type_filter",
+            holidayStatusFilter: "#hum_holiday_status_filter",
+            holidayMonthFilter: "#hum_holiday_month_filter",
+            holidayYearValue: "#hum_holiday_year_value",
+            applyFiltersButton: "#hum_holiday_apply_filters",
+            resetFiltersButton: "#hum_holiday_reset_filters",
+
+            holidayCalendarHeading: "#hum_holiday_calendar_heading",
+            holidayCalendar: "#hum_holiday_calendar",
+
+            declareHolidayModal: "#hum_holiday_declare_modal",
+            holidayDateInput: "#holiday_date",
+            holidayTypeInput: "#holiday_type",
+            addAnotherHolidayButton: "#hum_holiday_add_another",
+            saveHolidayButton: "#hum_holiday_save_btn",
+
+            cancelHolidayModal: "#hum_holiday_cancel_modal",
+            cancelHolidayDate: "#hum_holiday_cancel_date",
+            cancelHolidayReason: "#hum_holiday_cancel_reason",
+            confirmCancelHolidayButton: "#hum_holiday_confirm_cancel_btn",
+
+            holidayDetailsModal: "#hum_holiday_details_modal",
+            holidayDetailId: "#hum_holiday_detail_id",
+            holidayDetailDate: "#hum_holiday_detail_date",
+            holidayDetailType: "#hum_holiday_detail_type",
+            holidayDetailStatus: "#hum_holiday_detail_status",
+            holidayDetailReason: "#hum_holiday_detail_reason",
+            holidayDetailsCancelButton: "#hum_holiday_details_cancel_btn",
+
+            holidayTableBody: "#hum_holiday_table_body",
+            holidayTable: ".hum-holiday-table",
+            removeHolidayRow: ".hum-remove-holiday"
+        };
+
+        // list of holidays added in the declare modal
+        this.holidayDeclareList = [];
+
+        this.holidayCalendar = null;
+
+        // holiday which is open in the details modal
+        this.holidaySelected = null;
+
+        this.holidayCalendarConfig = {
+            initialView: "dayGridMonth",
+            height: "auto",
+            selectable: true,
+
+            headerToolbar: {
+                left: "prev,next",
+                center: "title",
+                right: "dayGridMonth,timeGridWeek,listMonth"
+            },
+
+            // calendar asks for events -> we call the holiday list API
+            events: (fetchInfo, successCallBack, failureCallBack) => {
+                this.holidayListApi(fetchInfo)
+                    .then((holidayEvents) => {
+                        successCallBack(holidayEvents);
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                        failureCallBack(error);
+                    });
+            },
+
+            // prev / next click -> month and year filter also changes
+            datesSet: (dateInfo) => {
+                this.holidaySyncMonthYearFilter(dateInfo);
+            },
+
+            // date click -> holiday already there ? show details : open declare modal
+            dateClick: (info) => {
+                this.holidayHandleDateClick(info);
+            },
+
+            eventClick: (info) => {
+                this.holidayShowDetails(info.event.extendedProps);
+            }
+        };
+    }
+
+    connectedCallback() {
+        try {
+            this.handlerYearOption();
+            this.initializeToastr();
+            this.initializeHolidayValidation();
+            this.initializeHolidayDatepicker();
+            this.bindAllRequiredEvents();
+            this.getHolidayList();
+        }
+        catch (error) {
+            console.log(error);
+        }
+    }
+
+    bindAllRequiredEvents() {
+        $(this).on("click", this.selectors.declareHolidayButton,{ classObject: this },this.handlerDeclareBtnClick);
+        $(this).on("click",this.selectors.cancelHolidayButton,{ classObject: this },this.handlerCancelBtnClick);
+        $(this).on("click",this.selectors.applyFiltersButton,{ classObject: this },this.handlerApplyFilterBtn);
+        $(this).on("click",this.selectors.resetFiltersButton,{ classObject: this },this.handlerResetFilterBtn);
+        $(this).on("click",this.selectors.addAnotherHolidayButton,{ classObject: this },this.handlerAddAnotherHoliday);
+        $(this).on("click",this.selectors.saveHolidayButton,{ classObject: this },this.handlerSaveHolidays);
+        $(this).on("click",this.selectors.removeHolidayRow,{ classObject: this },this.handlerRemoveHoliday);
+        $(this).on("click",this.selectors.confirmCancelHolidayButton,{ classObject: this },this.handlerConfirmCancelHoliday);
+        $(this).on("click",this.selectors.holidayDetailsCancelButton,{ classObject: this },this.handlerCancelFromDetails); 
+        $(this).on("input change",`${this.selectors.cancelHolidayDate}, ${this.selectors.cancelHolidayReason}`,{ classObject: this },this.handlerCancelHolidayInput);
+    }
+     
+    //  plugins
+     initializeToastr() {
+    toastr.options = {
+        closeButton: true,
+        progressBar: true,
+        positionClass: "toast-top-center",
+        timeOut: 3000,
+        preventDuplicates: true
+    };
+}
+ initializeHolidayValidation() {
+    const classObject = this;
+
+    $(classObject.selectors.declareHolidayModal)
+        .find("#hum_holiday_declare_form")
+        .validate({
+            rules: {
+                holidayDate: {
+                    required: true
+                },
+                holidayType: {
+                    required: true
+                }
+            },
+            messages: {
+                holidayDate: "Please select a holiday date.",
+                holidayType: "Please select a holiday type."
+            },
+            errorElement: "span",
+            errorClass: "text-danger",
+            errorPlacement: function (error, element) {
+                error.insertAfter(element);
+            }
+        });
+
+    $(classObject.selectors.cancelHolidayModal)
+        .find("#hum_holiday_cancel_form")
+        .validate({
+            rules: {
+                holidayDate: {
+                    required: true
+                },
+                holidayCancelledReason: {
+                    required: true,
+                    maxlength: 500
+                }
+            },
+            messages: {
+                holidayDate: "Please select the holiday date.",
+                holidayCancelledReason: {
+                    required: "Please enter the cancellation reason.",
+                    maxlength: "Maximum 500 characters allowed."
+                }
+            },
+            errorElement: "span",
+            errorClass: "text-danger",
+            errorPlacement: function (error, element) {
+                error.insertAfter(element);
+            }
+        });
+}  
+ initializeHolidayDatepicker() {
+    const classObject = this;
+
+    const datepickerConfig = {
+        dateFormat: "Y-m-d",
+        allowInput: true,
+      
+        
+    };
+
+    $(classObject.selectors.holidayDateInput)
+        .flatpickr(datepickerConfig);
+
+    $(classObject.selectors.cancelHolidayDate)
+        .flatpickr(datepickerConfig);
+}
+
+    /* ---------------------- button handlers ---------------------- */
+      
+    handlerDeclareBtnClick(event) {
+        const classObject = event.data.classObject;
+
+        classObject.holidayOpenDeclareModal("");
+    }
+
+    // open declare modal (selectedDate = yyyy-mm-dd, empty when opened from the button)
+    holidayOpenDeclareModal(selectedDate) {
+        const classObject = this;
+
+        classObject.holidayDeclareList = [];
+        classObject.displayDeclaredHolidayList();
+
+        $(classObject.selectors.holidayDateInput).val(selectedDate || "");
+        $(classObject.selectors.holidayTypeInput).val("");
+
+        $(classObject.selectors.declareHolidayModal).modal("show");
+    }
+
+    // calendar date click
+    holidayHandleDateClick(info) {
+        const classObject = this;
+
+        // week view gives date with time -> take only yyyy-mm-dd
+        const clickedDate = info.dateStr.substring(0, 10);
+
+        const existingHoliday = classObject.holidayCalendar.getEvents().find(function (calendarEvent) {
+            return calendarEvent.startStr.substring(0, 10) === clickedDate;
+        });
+
+        if (existingHoliday) {
+            classObject.holidayShowDetails(existingHoliday.extendedProps);
+        } else {
+            classObject.holidayOpenDeclareModal(clickedDate);
+        }
+    }
+
+    // Cancel button inside holiday details modal
+    handlerCancelFromDetails(event) {
+        const classObject = event.data.classObject;
+
+        if (!classObject.holidaySelected || classObject.holidaySelected.holidayCancelledFlag === "Y") {
+            return;
+        }
+        const selectedDate = classObject.holidaySelected.holidayDate;   // yyyy-mm-dd
+         const confrimReason= classObject.selectors.cancelHolidayReason;
+        // close details modal first, then open cancel modal (two modals should not overlap)
+         $(classObject.selectors.confirmCancelHolidayButton).hide(); 
+        $(classObject.selectors.holidayDetailsModal).one("hidden.bs.modal", function () {
+      
+            $(classObject.selectors.cancelHolidayDate).val(selectedDate);
+            $(classObject.selectors.cancelHolidayReason).val("");
+
+            $(classObject.selectors.cancelHolidayModal).modal("show", function(){        
+            if(confrimReason){
+                $(classObject.selectors.confirmCancelHolidayButton).show();
+              }else{
+               $(classObject.selectors.confirmCancelHolidayButton).hide();
+            }
+          });
+       
+        });
+
+        $(classObject.selectors.holidayDetailsModal).modal("hide");
+    }
+
+    handlerCancelBtnClick(event) {
+        const classObject = event.data.classObject;
+
+        $(classObject.selectors.cancelHolidayDate).val("");
+        $(classObject.selectors.cancelHolidayReason).val("");
+
+        $(classObject.selectors.confirmCancelHolidayButton).hide();
+
+        $(classObject.selectors.cancelHolidayModal).modal("show");
+    }
+    handlerCancelHolidayInput(event){
+        const classObject =event.data.classObject;
+
+        const holidayDate =$(classObject.selectors.cancelHolidayDate).val();
+        const holidayType=$(classObject.selectors.cancelHolidayReason).val().trim();
+
+        if(holidayDate && holidayType){
+            $(classObject.selectors.confirmCancelHolidayButton).show();
+        }
+        else{
+            $(classObject.selectors.confirmCancelHolidayButton).hide();
+        }
+    }
+
+    handlerApplyFilterBtn(event) {   
+        const classObject = event.data.classObject;
+
+        const month = $(classObject.selectors.holidayMonthFilter).val();
+        const year = $(classObject.selectors.holidayYearValue).val();
+
+        // go to selected month, then reload (type / status filters also apply)
+        classObject.holidayCalendar.gotoDate(year + "-" + month + "-01");
+        classObject.getHolidayList();
+    }
+
+    handlerResetFilterBtn(event) {
+        const classObject = event.data.classObject;
+        const today = new Date();
+
+        $(classObject.selectors.holidayTypeFilter).val("");
+        $(classObject.selectors.holidayStatusFilter).val("");
+        $(classObject.selectors.holidayMonthFilter)
+            .val(String(today.getMonth() + 1).padStart(2, "0"));
+        $(classObject.selectors.holidayYearValue).val(String(today.getFullYear()));
+
+        classObject.holidayCalendar.gotoDate(today);
+        classObject.getHolidayList();
+    }
+
+    // year dropdown + default month / year = today
+    handlerYearOption() {
+        const self = this;
+        const today = new Date();
+
+        let curyear = today.getFullYear() + 1;
+        let options = "";
+
+        for (let i = 0; i < 7; i++) {
+            options += `<option value="${curyear}">${curyear}</option>`;
+            curyear -= 1;
+        }
+
+        $(self.selectors.holidayYearValue).html(options);
+
+        $(self.selectors.holidayYearValue).val(String(today.getFullYear()));
+        $(self.selectors.holidayMonthFilter)
+            .val(String(today.getMonth() + 1).padStart(2, "0"));
+    }
+
+    /* ---------------------- declare holidays ---------------------- */
+
+    handlerAddAnotherHoliday(event) {
+        const classObject = event.data.classObject;
+
+        const holidayDate = $(classObject.selectors.holidayDateInput).val();
+        const holidayType = $(classObject.selectors.holidayTypeInput).val();
+
+        const validator = $(classObject.selectors.declareHolidayModal).find("#hum_holiday_declare_form").validate();
+
+   if (
+    !validator.element($(classObject.selectors.holidayDateInput)) ||
+    !validator.element($(classObject.selectors.holidayTypeInput))
+   ) {
+    return;
+   }
+
+        const alreadyAdded = classObject.holidayDeclareList.some(function (holiday) {
+            return holiday.holidayDate === holidayDate;
+        });
+
+        if (alreadyAdded) {
+            toastr.error("This date is already added to the list.");
+            return;
+        }
+
+        classObject.holidayDeclareList.push({
+            holidayDate: holidayDate,
+            holidayType: holidayType
+        });
+
+        classObject.displayDeclaredHolidayList();
+
+        $(classObject.selectors.holidayDateInput).val("");
+        $(classObject.selectors.holidayTypeInput).val("");
+    }
+
+    displayDeclaredHolidayList() {
+        const classObject = this;
+        let tableRows = "";
+
+        if (classObject.holidayDeclareList.length > 0) {
+
+            classObject.holidayDeclareList.forEach((holiday, index) => {
+                tableRows += `
+                    <tr>
+                        <td>${classObject.holidayChangeDateFormat(holiday.holidayDate)}</td>
+                        <td>${classObject.holidayTypeName(holiday.holidayType)}</td>
+                        <td>
+                            <button type="button"
+                                class="btn btn-sm text-danger hum-remove-holiday"
+                                data-index="${index}">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // array length > 0  -> show table and save button
+            $(classObject.selectors.holidayTable).removeClass("d-none");
+            $(classObject.selectors.saveHolidayButton).removeClass("d-none");
+        }
+        else {
+            $(classObject.selectors.holidayTable).addClass("d-none");
+            $(classObject.selectors.saveHolidayButton).addClass("d-none");
+        }
+
+        $(classObject.selectors.holidayTableBody).html(tableRows);
+    }
+
+    handlerRemoveHoliday(event) {
+        const classObject = event.data.classObject;
+
+        const index = Number($(event.currentTarget).attr("data-index"));
+
+        classObject.holidayDeclareList.splice(index, 1);
+
+        classObject.displayDeclaredHolidayList();
+    }
+
+    handlerSaveHolidays(event) {
+        event.preventDefault();
+
+        const classObject = event.data.classObject;
+
+        if (classObject.holidayDeclareList.length === 0) {
+            toastr.warning("Please add at least one holiday.");
+            return;
+        }
+
+        const firstSavedDate = classObject.holidayDeclareList[0].holidayDate;
+
+        $.ajax({
+            url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/holiday/declare",
+            type: "POST",
+            contentType: "application/json",
+            dataType: "json",
+            data: JSON.stringify(classObject.holidayFormatSaveData()),
+
+            beforeSend: function () {
+                $(classObject.selectors.saveHolidayButton).prop("disabled", true);
+            },
+
+            success: function (response) {
+                $(classObject.selectors.saveHolidayButton).prop("disabled", false);
+
+                const result = classObject.holidayReadApiResult(response);
+
+                if (result.successDates.length > 0) {
+
+                    // remove the saved dates from the list, failed dates stay for correction
+                    classObject.holidayDeclareList = classObject.holidayDeclareList.filter(function (holiday) {
+                        const apiDate = classObject.holidayChangeDateFormat(holiday.holidayDate);
+                        return result.successDates.indexOf(apiDate) === -1;
+                    });
+
+                    classObject.displayDeclaredHolidayList();
+
+                    // show saved holidays on the calendar
+                    classObject.holidayCalendar.gotoDate(firstSavedDate);
+                    classObject.getHolidayList();
+                }
+
+                if (result.failureMessages.length === 0) {
+                    toastr.success("Holidays declared successfully.");
+                    $(classObject.selectors.declareHolidayModal).modal("hide");
+                }
+                else {
+                    toastr.error(result.failureMessages.join("\n"));
+
+                    // nothing left to correct -> close
+                    if (classObject.holidayDeclareList.length === 0) {
+                        $(classObject.selectors.declareHolidayModal).modal("hide");
+                    }
+                }
+            },
+
+            error: function (xhr) {
+                $(classObject.selectors.saveHolidayButton).prop("disabled", false);
+                console.error(xhr.responseText);
+                toastr.error("Unable to declare holidays. Please try again.");
+            }
+        });
+    }
+
+    // request body for declare API
+    holidayFormatSaveData() {
+        const classObject = this;
+
+        return classObject.holidayDeclareList.map((holiday) => {
+            return {
+                holidayId: null,
+                holidayDate: classObject.holidayChangeDateFormat(holiday.holidayDate),   // dd-mm-yyyy
+                holidayType: holiday.holidayType,
+                teacherId: 1
+            };
+        });
+    }
+
+    /* ---------------------- cancel holiday ---------------------- */
+
+    handlerConfirmCancelHoliday(event) {
+        event.preventDefault();
+
+        const classObject = event.data.classObject;
+
+     const holidayDate = $(classObject.selectors.cancelHolidayDate).val();
+     const cancelReason = $(classObject.selectors.cancelHolidayReason).val().trim();
+
+      const cancelForm = $(classObject.selectors.cancelHolidayModal).find("#hum_holiday_cancel_form");
+
+     if (!cancelForm.valid()) {
+      return;
+    }  
+        
+           Swal.fire({
+    title:  "Cancel Holiday?",
+    text: "Are you sure you want to cancel this holiday?",
+    width: "300px",
+    padding: "1rem",
+    showCancelButton: true,
+    confirmButtonText: "Yes",
+    cancelButtonText: "No",
+    reverseButtons: true,
+    customClass: {
+        popup: "small-swal-popup",
+        title: "small-swal-title",
+        htmlContainer: "small-swal-text",
+        confirmButton: "btn btn-sm btn-primary",
+        cancelButton: "btn btn-sm btn-secondary"
+    },
+    buttonsStyling: false
+}).then((result) => {
+    if (result.isConfirmed) {
+               $.ajax({
+            url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/holiday/cancel",
+            type: "POST",
+            contentType: "application/json",
+            dataType: "json",
+            data: JSON.stringify([
+                {
+                    holidayDate: classObject.holidayChangeDateFormat(holidayDate),   // dd-mm-yyyy
+                    holidayCancelledReason: cancelReason,
+                    teacherId: 1
+                }
+            ]),
+
+            beforeSend: function () {
+                $(classObject.selectors.confirmCancelHolidayButton).prop("disabled", true);
+            },
+
+            success: function (response) {
+                $(classObject.selectors.confirmCancelHolidayButton).prop("disabled", false);
+
+                const result = classObject.holidayReadApiResult(response);
+
+                if (result.failureMessages.length === 0) {
+                    toastr.success("Holiday cancelled successfully.");
+
+                    $(classObject.selectors.cancelHolidayDate).val("");
+                    $(classObject.selectors.cancelHolidayReason).val("");
+                    $(classObject.selectors.cancelHolidayModal).modal("hide");
+
+                    classObject.holidayCalendar.gotoDate(holidayDate);
+                    classObject.getHolidayList();
+                }
+                else {
+                    toastr.error(result.failureMessages.join("\n"));
+                }
+            },
+
+            error: function (xhr) {
+                $(classObject.selectors.confirmCancelHolidayButton).prop("disabled", false);
+                console.error(xhr.responseText);
+                toastr.error("Unable to cancel holiday. Please try again.");
+            }
+        });
+    }
+});
+
+ 
+}
+
+    /* ---------------------- holiday list ---------------------- */
+
+    // same idea as getStudentList : create once, next time just reload
+    getHolidayList() {
+        if (this.holidayCalendar) {
+            this.holidayCalendar.refetchEvents();
+        }
+        else {
+            const month = $(this.selectors.holidayMonthFilter).val();
+            const year = $(this.selectors.holidayYearValue).val();
+
+            this.holidayCalendarConfig.initialDate = year + "-" + month + "-01";
+
+            // assign first, then render (calendar fetches events on render)
+            this.holidayCalendar = new FullCalendar.Calendar(
+                $(this.selectors.holidayCalendar)[0],
+                this.holidayCalendarConfig
+            );
+
+            this.holidayCalendar.render();
+        }
+    }
+
+    // month and year of the page which calendar is showing (taken from visible range)
+    holidayGetMonthYear(rangeStart, rangeEnd) {
+        const middleTime = (rangeStart.getTime() + rangeEnd.getTime()) / 2;
+        const middleDate = new Date(middleTime);
+
+        return {
+            month: String(middleDate.getMonth() + 1).padStart(2, "0"),
+            year: String(middleDate.getFullYear())
+        };
+    }
+
+    // calendar moved (prev / next / view change) -> update dropdowns
+    holidaySyncMonthYearFilter(dateInfo) {
+        const classObject = this;
+        const monthYear = classObject.holidayGetMonthYear(dateInfo.start, dateInfo.end);
+
+        $(classObject.selectors.holidayMonthFilter).val(monthYear.month);
+
+        if ($(classObject.selectors.holidayYearValue).find('option[value="' + monthYear.year + '"]').length === 0) {
+
+            $(classObject.selectors.holidayYearValue).append(`<option value="${monthYear.year}">${monthYear.year}</option>`);
+        }
+
+        $(classObject.selectors.holidayYearValue).val(monthYear.year);
+    }
+
+    holidayFormatRequestData(fetchInfo) {
+        const classObject = this;
+
+        const monthYear = classObject.holidayGetMonthYear(fetchInfo.start, fetchInfo.end);
+
+        classObject.holidayFilterRequest = {
+            draw: 1,
+            length: 10,
+            start: 0,
+
+            holidayFilter: {
+                holidayType: $(classObject.selectors.holidayTypeFilter).val() || "",
+                holidayStatusFlag: $(classObject.selectors.holidayStatusFilter).val() || "",
+                holidayDate: null
+            },
+
+            order: {
+                column: "sno",
+                type: "desc"
+            },
+
+            filterBy: "Month",
+            filterValue: monthYear.month + "-" + monthYear.year      // MM-YYYY
+        };
+
+        return classObject.holidayFilterRequest;
+    }
+
+    holidayListApi(fetchInfo) {
+        const classObject = this;
+
+        return new Promise(function (resolve, reject) {
+            $.ajax({
+                url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/holiday/list",
+                type: "POST",
+                contentType: "application/json",
+                dataType: "json",
+                data: JSON.stringify(classObject.holidayFormatRequestData(fetchInfo)),
+
+                success: function (response) {
+                    resolve(classObject.displayHolidayDataList(response));
+                },
+
+                error: function (xhr) {
+                    console.error(xhr.responseText);
+                    reject(xhr);
+                }
+            });
+        });
+    }
+
+    // API response -> calendar events
+    displayHolidayDataList(response) {
+        const classObject = this;
+        const holidayEvents = [];
+
+        if (response.status === "Success" && Array.isArray(response.data)) {
+
+            for (const res of response.data) {
+                const holidayDate = classObject.holidayChangeDateFormat(res.holidayDate);   // yyyy-mm-dd
+                const holidayName = classObject.holidayTypeName(res.holidayType);
+                const isCancelled = res.holidayCancelledFlag === "Y";
+
+                holidayEvents.push({
+                    id: res.holidayId,
+                    title: isCancelled ? holidayName + " (Cancelled)" : holidayName,
+                    start: holidayDate,
+                    allDay: true,
+                    backgroundColor: isCancelled ? "#dc2626" : "#102f59",
+                    borderColor: isCancelled ? "#dc2626" : "#102f59",
+
+                    extendedProps: {
+                        holidayId: res.holidayId,
+                        holidayDate: holidayDate,
+                        holidayType: res.holidayType,
+                        holidayCancelledFlag: res.holidayCancelledFlag,
+                        holidayCancelledReason: res.holidayCancelledReason
+                    }
+                });
+            }
+        }
+
+        return holidayEvents;
+    }
+
+    // holiday click -> details modal
+    holidayShowDetails(holiday) {
+        const classObject = this;
+        const isCancelled = holiday.holidayCancelledFlag === "Y";
+
+        classObject.holidaySelected = holiday;
+
+        // cancel button works only for active holiday
+        $(classObject.selectors.holidayDetailsCancelButton).prop("disabled", isCancelled);
+
+        $(classObject.selectors.holidayDetailId).text(holiday.holidayId || "—");
+        $(classObject.selectors.holidayDetailDate).text(classObject.holidayChangeDateFormat(holiday.holidayDate));
+        $(classObject.selectors.holidayDetailType).text(classObject.holidayTypeName(holiday.holidayType) || "—");
+        $(classObject.selectors.holidayDetailStatus).text(isCancelled ? "Cancelled" : "Active");
+        $(classObject.selectors.holidayDetailReason).text(isCancelled ? (holiday.holidayCancelledReason || "—") : "—");
+        $(classObject.selectors.holidayDetailsModal).modal("show");
+    }
+
+    /* ---------------------- common helpers ---------------------- */
+
+    holidayTypeName(holidayType) {
+        let holidayName = "";
+
+        switch (holidayType) {
+            case "WEEK":
+                holidayName = "Weekly Off";
+                break;
+
+            case "NATL":
+                holidayName = "National";
+                break;
+
+            case "FEST":
+                holidayName = "Festival";
+                break;
+
+            case "INST":
+                holidayName = "Institutional";
+                break;
+
+            case "EMER":
+                holidayName = "Emergency";
+                break;
+
+            case "OTHR":
+                holidayName = "Other";
+                break;
+
+            default:
+                holidayName = "Holiday";
+                break;
+        }
+
+        return holidayName;
+    }
+
+    // yyyy-mm-dd <-> dd-mm-yyyy (same swap works both ways)
+    holidayChangeDateFormat(dateString) {
+        if (!dateString) {
+            return "";
+        }
+
+        const dateParts = dateString.split("-");
+
+        return dateParts[2] + "-" + dateParts[1] + "-" + dateParts[0];
+    }
+
+    // declare / cancel API response ->
+    //   { totalcount, successCount, failureCount, responses:[{status, date, data}] }
+    holidayReadApiResult(response) {
+        const result = {
+            successDates: [],
+            failureMessages: []
+        };
+
+        if (!response || !Array.isArray(response.responses)) {
+            result.failureMessages.push("Unexpected response from server.");
+            return result;
+        }
+
+        for (const res of response.responses) {
+            if (res.status === "Success") {
+                result.successDates.push(res.date);
+            }
+            else {
+                // failure data is an array of messages (or a single text)
+                const message = Array.isArray(res.data) ? res.data.join(", ") : res.data;
+                result.failureMessages.push(res.date + " : " + message);
+            }
+        }
+
+        return result;
+    }
+}
+
+customElements.define("hum-holiday-management", HumHolidayManagement);

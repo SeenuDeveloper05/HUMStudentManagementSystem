@@ -1,0 +1,219 @@
+* {
+    padding: 0;
+    margin: 0;
+}
+  .hum-icon-font{
+         font-size: 15px;
+      }
+      
+      
+html,
+body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+#hum_sms_sidebar_layout {
+    flex-shrink: 0;
+}
+
+#hum_sms_header_layout,
+#hum_sms_footer_layout {
+    flex: 0 0 auto;
+}
+
+#hum_sms_main_layout {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Calendar size */
+.flatpickr-calendar {
+    width: 280px !important;
+    max-width: 280px !important;
+    padding: 6px !important;
+    border-radius: 8px;
+    font-size: 12px;
+    box-sizing: border-box;
+}
+
+/* Month and year header */
+.flatpickr-months {
+    height: 34px !important;
+}
+
+.flatpickr-month {
+    height: 34px !important;
+}
+
+.flatpickr-current-month {
+    font-size: 13px !important;
+    padding-top: 5px !important;
+}
+
+/* Calendar container */
+.flatpickr-innerContainer,
+.flatpickr-rContainer {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+/* Weekday alignment */
+.flatpickr-weekdays {
+    width: 100% !important;
+    height: 28px !important;
+}
+
+.flatpickr-weekday {
+    font-size: 10px !important;
+    font-weight: 600;
+}
+
+/* Date grid alignment */
+.flatpickr-days {
+    width: 100% !important;
+}
+
+.flatpickr-day {
+    flex-basis: 14.2857% !important;
+    width: 14.2857% !important;
+    max-width: 14.2857% !important;
+    height: 30px !important;
+    line-height: 30px !important;
+    margin: 0 !important;
+    font-size: 11px !important;
+    border-radius: 5px !important;
+}
+
+/* Day container */
+.dayContainer {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    justify-content: flex-start !important;
+}
+
+/* Selected date */
+.flatpickr-day.selected {
+    background: #17365d !important;
+    border-color: #17365d !important;
+    color: #fff !important;
+}
+
+/* Hover */
+.flatpickr-day:hover {
+    background: #e8f0fc;
+}
+
+/* swal */
+.small-swal-popup {
+    border-radius: 10px;
+}
+
+.small-swal-title {
+    font-size: 18px !important;
+}
+
+.small-swal-text {
+    font-size: 13px !important;
+}
+.swal2-actions {
+    gap: 12px !important;
+}
+
+  /* toastr */
+  #toast-container.toast-top-center {
+    width: 350px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#toast-container > div {
+    width: 100% !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* Mark Entry Action Buttons */
+
+.hum-mark-action-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.hum-mark-action-group .btn {
+    width: 27px;
+    height: 27px;
+    min-width: 27px;
+    padding: 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+}
+
+.hum-mark-action-group .hum-icon-font {
+    font-size: 16px;
+    line-height: 1;
+}
+ /* for requierd fields */
+.hum-mark-required {
+    color: #dc3545;
+}
+
+/* DataTables Pagination Styling */
+
+.hum-custom-pagination .dataTables_paginate,
+.hum-custom-pagination .dt-paging {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+}
+
+.hum-custom-pagination .paginate_button,
+.hum-custom-pagination .dt-paging-button {
+    min-width: 32px !important;
+    height: 32px !important;
+    padding: 5px 10px !important;
+    margin: 0 !important;
+    border: 1px solid #dce4ef !important;
+    border-radius: 5px !important;
+    background: #fff !important;
+    color: #102f59 !important;
+    font-size: 12px !important;
+    line-height: 20px !important;
+    box-shadow: none !important;
+}
+
+.hum-custom-pagination .paginate_button.current,
+.hum-custom-pagination .dt-paging-button.current {
+    border-color: #102f59 !important; 
+}
+
+.hum-custom-pagination .paginate_button:hover,
+.hum-custom-pagination .dt-paging-button:hover {
+    background: #edf2f8 !important;
+    border-color: #b8c9df !important;
+    color: #fff !important;
+}
+
+.hum-custom-pagination .paginate_button.disabled,
+.hum-custom-pagination .dt-paging-button.disabled {
+    color: #a0aabb !important;
+    opacity: 0.6;
+}
+
+.hum-custom-pagination span {
+    display: inline-flex;
+    gap: 4px;
+}
