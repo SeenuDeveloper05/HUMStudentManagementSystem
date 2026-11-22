@@ -361,7 +361,7 @@ handlerResetQuarterlyFilter(event) {
                     $(classObject).find(classObject.selectors.detailsStudentName).text(fullName);
                     $(classObject).find(classObject.selectors.detailsBranch).text(branchOfStudy);
                     $(classObject).find(classObject.selectors.detailsQuarter).text(quarterly.quarterAndYear);
-                    $(classObject).find(classObject.selectors.detailsCompliance).text(complianceStatusFlag);
+                    $(classObject).find(classObject.selectors.detailsCompliance).html(classObject.forCompliance(complianceStatusFlag));
                     $(classObject).find(classObject.selectors.detailsWorkingDays).text(quarterly.totalSchoolWorkingDays);
                     $(classObject).find(classObject.selectors.detailsPresentDays).text(quarterly.totalDaysOfPresent);
                     $(classObject).find(classObject.selectors.detailsAbsentDays).text(quarterly.totalDaysOfAbsents);

@@ -14,14 +14,14 @@ const HumLoginPage = function (){
     //     { username: "Kamal345", password: "Humworld@1" }
     //  ];
 
-     
-     
-   
+
      this.initializeValidator =function (){
         $(self.selectors.loginForm).validate({
+           
            rules:{
               hum_login_username:{
-                required:true
+                required:true,
+                  // lettersonly: true
               },
               hum_login_password:{
                 required: true
@@ -29,7 +29,8 @@ const HumLoginPage = function (){
            },
            messages:{
             hum_login_username:{
-                required:"Please enter your username"
+                required:"Please enter your username",
+                  // lettersonly: "Please enter letters only"
             },
             hum_login_password:{
                  required: "Please enter your password"
@@ -37,7 +38,12 @@ const HumLoginPage = function (){
            },
 
           errorPlacement: function (error, element) {
-          error.insertAfter(element.closest(".input-group"));
+             error.css("color", "red");
+          if (element.closest(".input-group").length) {
+        error.insertAfter(element.closest(".input-group"));
+    } else {
+        error.insertAfter(element);
+    }
 
         }
 
@@ -50,48 +56,63 @@ const HumLoginPage = function (){
       };
 
 
-      this.handleLogin = function (){
-        const form =$(self.selectors.loginForm);
+  this.handleLogin = function () {
 
-        // if(!form.valid()){
-        //     return;
-        // }
-        console.log("hi");
-        const username=$(self.selectors.username).val().trim();
-        const password=$(self.selectors.password).val();
+    const form = $(self.selectors.loginForm);
 
-        const users =JSON.parse(localStorage.getItem("hum-users")|| "[]");
-        console.log("usre",users);
-        const loggedInUser = users.find(function(user){
-             return user.username === username &&
-                    user.password === password;
-        });
-         
-         if(loggedInUser){
-            localStorage.setItem(
-                "hum_logged_in_user",
-                JSON.stringify({ username: loggedInUser.username})
-            );
+    const username = $(self.selectors.username).val().trim();
+    const password = $(self.selectors.password).val();
+
+    // Clear previous error message
+   
+
+    const users = JSON.parse(
+        localStorage.getItem("hum-users") || "[]"
+    );
+
+    const loggedInUser = users.find(function (user) {
+
+        return user.username === username &&
+               user.password === password;
+
+    });
+
+    if (loggedInUser) {
+
+        localStorage.setItem(
+            "hum_logged_in_user",
+            JSON.stringify({
+                username: loggedInUser.username
+            })
+        );
+
         Swal.fire({
-              icon: "success",
-              title: "Login Successful!",
-              text: "Welcome, " + loggedInUser.username,
-              showConfirmButton: false,
-              timer: 1000,
-              timerProgressBar: true
-          }).then(() => {
-           window.location.href = "dasboard.html";
-      });
+            icon: "success",
+            title: "Login Successful!",
+            text: "Welcome, " + loggedInUser.username,
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true
 
-         } else {
-            Swal.fire({
-                icon: "error",
-                title: "Login Failed",
-                text: "Invalid username or password!"
-            });
-        }
+        }).then(() => {
 
-      }
+            window.location.href = "dasboard.html";
+
+        });
+
+    } else {
+         if(username&&password){
+                 $("#hum_login_error").text(
+            "Invalid Credentials"
+        );
+         }else{
+                       $("#hum_login_error").text("");
+         }
+         return;     
+            
+    }
+
+};
 
         this.togglePassword= function() {
          const passwordInput=$(self.selectors.password);

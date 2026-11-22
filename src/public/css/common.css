@@ -112,6 +112,7 @@ body {
 
 /* swal */
 .small-swal-popup {
+    width: 250px;
     border-radius: 10px;
 }
 
@@ -178,6 +179,7 @@ body {
     justify-content: flex-end;
     align-items: center;
     gap: 4px;
+      color: black !important;
 }
 
 .hum-custom-pagination .paginate_button,
@@ -188,8 +190,7 @@ body {
     margin: 0 !important;
     border: 1px solid #dce4ef !important;
     border-radius: 5px !important;
-    background: #fff !important;
-    color: #102f59 !important;
+    background: white!important; 
     font-size: 12px !important;
     line-height: 20px !important;
     box-shadow: none !important;
@@ -197,23 +198,90 @@ body {
 
 .hum-custom-pagination .paginate_button.current,
 .hum-custom-pagination .dt-paging-button.current {
-    border-color: #102f59 !important; 
+  
+    background-color:#76b4db !important;
+  
+    
 }
 
 .hum-custom-pagination .paginate_button:hover,
 .hum-custom-pagination .dt-paging-button:hover {
-    background: #edf2f8 !important;
+    background: rgb(13 110 253) !important;   
     border-color: #b8c9df !important;
-    color: #fff !important;
+     color: #000 !important;
 }
 
 .hum-custom-pagination .paginate_button.disabled,
 .hum-custom-pagination .dt-paging-button.disabled {
-    color: #a0aabb !important;
+  
     opacity: 0.6;
 }
 
 .hum-custom-pagination span {
     display: inline-flex;
     gap: 4px;
+}
+.material-symbols-rounded {
+    font-size: 19px;
+    vertical-align: middle;
+    margin-right: 4px;
+    line-height: 1;
+}
+
+
+/* Common Cancel Confirmation Popover */
+
+.hum-cancel-popover {
+    --bs-popover-max-width: 210px;
+    --bs-popover-border-radius: 12px;
+    --bs-popover-border-color: #d9d9d9;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.10);
+}
+
+.hum-cancel-popover .popover-body {
+    padding: 10px;
+}
+
+.hum-cancel-confirm-content {
+    width: 185px;
+    text-align: center;
+}
+
+.hum-cancel-confirm-content p {
+    font-size: 14px;
+    font-weight: 600;
+    color: #30343b;
+    line-height: 1.5;
+    margin-bottom: 14px;
+}
+
+.hum-cancel-confirm-actions {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+.hum-cancel-confirm-actions button {
+    min-width: 52px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.hum-confirm-no {
+    background: #fff;
+    color: #17365d;
+    border: 1px solid #17365d;
+}
+
+.hum-confirm-yes {
+    background: #17365d;
+    color: #fff;
+    border: 1px solid #17365d;
+}
+
+.hum-cancel-confirm-actions button:hover {
+    opacity: 0.85;
 }

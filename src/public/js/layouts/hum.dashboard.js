@@ -76,30 +76,12 @@ class HumSmsDashboard extends HTMLElement {
 
 
     bindAllRequiredEvents() {
-        $(this)
-            .on(
-                "click",
-                [
-                    this.selectors.addStudentButton,
-                    this.selectors.addTeacherButton,
-                    this.selectors.markEntryButton,
-                    this.selectors.viewResultsButton
-                ].join(","),
+        $(this).on("click",[this.selectors.addStudentButton,this.selectors.addTeacherButton,this.selectors.markEntryButton,this.selectors.viewResultsButton].join(","),
                 { classObject: this },
                 this.handlerDashboardQuickAction
             )
-            .on(
-                "change",
-                [
-                    this.selectors.quarter,
-                    this.selectors.year
-                ].join(","),
-                { classObject: this },
-                this.handlerDashboardFilter
-            );
+            .on("change",[ this.selectors.quarter,this.selectors.year].join(","),{ classObject: this },this.handlerDashboardFilter);
     }
-
-
     initializeToastr() {
         toastr.options = {
             closeButton: true,
@@ -109,8 +91,6 @@ class HumSmsDashboard extends HTMLElement {
             preventDuplicates: true
         };
     }
-
-
     // =====================================
     // HANDLERS
     // =====================================
@@ -138,56 +118,37 @@ class HumSmsDashboard extends HTMLElement {
         $(classObject).find(classObject.selectors.quarter)
             .val("Q" + (Math.floor(today.getMonth() / 3) + 1));
     }
-
-
     handlerDashboardFilter(event) {
-
         const classObject = event.data.classObject;
-
         classObject.getDashboardAttendance();
         classObject.getDashboardTopper();
         classObject.getDashboardStudentTrend();
     }
-
-
     // Quick action buttons (working - unchanged)
     handlerDashboardQuickAction(event) {
 
         event.preventDefault();
-
         const classObject = event.data.classObject;
-
         const selectedPage = $(event.currentTarget).attr("data-page");
-
         const sidebarLink = $("hum-sidebar").find(
             `.sidebar-link[data-page="${selectedPage}"]`
         );
-
         if (sidebarLink.length) {
             sidebarLink.trigger("click");
         }
     }
-
-
     // =====================================
     // COMMON
     // =====================================
-
     getSelectedQuarter() {
-
         const classObject = this;
-
         const quarter = $(classObject).find(classObject.selectors.quarter).val();
         const year = $(classObject).find(classObject.selectors.year).val();
-
         if (!quarter || !year) {
             return "";
         }
-
         return quarter + "-" + year;
     }
-
-
     dashboardFormatStudentRequest(branch, length) {
 
         return {
@@ -211,8 +172,6 @@ class HumSmsDashboard extends HTMLElement {
             searchColumn: ""
         };
     }
-
-
     dashboardFormatAttendanceRequest(statusFlag, quarterValue) {
 
         return {
@@ -240,7 +199,6 @@ class HumSmsDashboard extends HTMLElement {
             filterValue: quarterValue
         };
     }
-
 
     dashboardFormatReportRequest(quarterValue) {
 
@@ -470,9 +428,7 @@ class HumSmsDashboard extends HTMLElement {
     displayBranchLegend(branchLabels, branchValues) {
 
         const classObject = this;
-
         let legendHtml = "";
-
         branchLabels.forEach(function (branch, index) {
             legendHtml += `
                 <div class="hum-branch-legend-item">

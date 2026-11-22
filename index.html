@@ -72,7 +72,7 @@
 
         .hum-login-input {
             height: 37px;
-            font-size: 12px;
+            font-size: 15px;
         }
 
         .hum-login-button {
@@ -127,13 +127,7 @@
                         Academic Administration Portal
                     </p>
 
-                    <h2 class="hum-welcome mb-2">
-                        Welcome Back
-                    </h2>
-
-                    <p class="text-secondary small mb-3">
-                        Sign in to continue to your account
-                    </p>
+               
 
                     <form id="hum_login_form" class="text-start">
 
@@ -169,7 +163,7 @@
                                 <span class="material-symbols-outlined">visibility</span>
                             </button>
                         </div>
-
+                          <div id="hum_login_error" class="text-danger mt-2"></div>
                         <div class="text-end mb-4">
                             <a href="#forgot-password" class="text-primary text-decoration-none small">
                                 Forgot Password?
@@ -197,6 +191,8 @@
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+     <script src="./src/public/js/layouts/hum.common.validation.js"></script>
 
     <!-- Login JavaScript -->
     <script src="./src/public/js/application/hum.login.js"></script>

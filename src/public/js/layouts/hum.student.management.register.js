@@ -51,13 +51,14 @@ class HumStudentManagementRegister extends HTMLElement {
 
             smsMainContainer: "#hum_sms_main_layout"
         };
+       
     }
 
     connectedCallback() {
         try {
             this.bindAllRequiredEvents();
             this.initializeStudentForm();
-
+          this.showCancelConfirmation = this.initializePopOver();
         this.initializeToastr();
         this.initializeDatePicker();
         this.initializeInputMask();
@@ -111,19 +112,91 @@ class HumStudentManagementRegister extends HTMLElement {
         preventDuplicates: true
     };
 }
+initializePopOver() {
 
+    let activeCancelConfirmation = null;
+
+    const showCancelConfirmation = (button, onConfirm) => {
+
+        if (activeCancelConfirmation) {
+            activeCancelConfirmation.dispose();
+            activeCancelConfirmation = null;
+        }
+
+        const popover = new bootstrap.Popover(button, {
+            trigger: "manual",
+            placement: "top",
+            html: true,
+            sanitize: false,
+            container: "body",
+            customClass: "hum-cancel-popover",
+
+            content: `
+                <div class="hum-cancel-confirm-content">
+                    <p>Are you sure you want to cancel this form?</p>
+
+                    <div class="hum-cancel-confirm-actions">
+                        <button type="button" class="hum-confirm-no">
+                            No
+                        </button>
+
+                        <button type="button" class="hum-confirm-yes">
+                            Yes
+                        </button>
+                    </div>
+                </div>
+            `
+        });
+
+        activeCancelConfirmation = popover;
+
+        button.addEventListener("shown.bs.popover", function () {
+
+            const popoverId = button.getAttribute("aria-describedby");
+            const popoverElement = document.getElementById(popoverId);
+
+            if (!popoverElement) return;
+
+            popoverElement.querySelector(".hum-confirm-no")
+                .addEventListener("click", function () {
+                    popover.dispose();
+                    activeCancelConfirmation = null;
+                });
+
+            popoverElement.querySelector(".hum-confirm-yes")
+                .addEventListener("click", function () {
+
+                    popover.dispose();
+                    activeCancelConfirmation = null;
+
+                    if (typeof onConfirm === "function") {
+                        onConfirm();
+                    }
+                });
+
+        }, { once: true });
+
+        popover.show();
+    };
+
+    return showCancelConfirmation;
+}
  initializeStudentValidation() {
 
     $(this).find(this.selectors.studentRegisterForm).validate({
 
         rules: {
-            firstName: {
+            FirstName: {
                 required: true,
-                minlength: 2
+                minlength: 2,
+                maxlength:20,
+                lettersonly:true
             },
-            lastName: {
+            LastName: {
                 required: true,
-                minlength: 2
+                minlength: 2,
+                maxlength:20,
+                lettersonly:true
             },
             gender: {
                 required: true
@@ -145,7 +218,7 @@ class HumStudentManagementRegister extends HTMLElement {
             },
             mail: {
                 required: true,
-                email: true
+                validemail: true
             },
             emergencyContactPersonName: {
                 required: true
@@ -171,13 +244,15 @@ class HumStudentManagementRegister extends HTMLElement {
         },
 
         messages: {
-            firstName: {
+            FirstName: {
                 required: "Please enter first name.",
-                minlength: "First name must contain at least 2 characters."
+                minlength: "First name must contain at least 2 characters.",
+                lettersonly: "Please enter letters only"
             },
-            lastName: {
+            LastName: {
                 required: "Please enter last name.",
-                minlength: "Last name must contain at least 2 characters."
+                minlength: "Last name must contain at least 2 characters.",
+                lettersonly: "Please enter letters only"
             },
             gender: {
                 required: "Please select gender."
@@ -199,7 +274,7 @@ class HumStudentManagementRegister extends HTMLElement {
             },
             mail: {
                 required: "Please enter email address.",
-                email: "Please enter a valid email address."
+                validemail: "Please enter a valid email address."
             },
             emergencyContactPersonName: {
                 required: "Please enter emergency contact person name."
@@ -224,11 +299,14 @@ class HumStudentManagementRegister extends HTMLElement {
             }
         },
 
-        errorElement: "small",
-        errorClass: "text-danger",
+               errorPlacement: function (error, element) {
+             error.css("color", "red");
+           if (element.closest(".input-group").length) {
+        error.insertAfter(element.closest(".input-group"));
+    } else {
+        error.insertAfter(element);
+    }
 
-        errorPlacement: function(error, element) {
-            error.insertAfter(element);
         },
 
    
@@ -320,15 +398,21 @@ class HumStudentManagementRegister extends HTMLElement {
             }
        });
     }
-    handlerCancelStudent(event) {
-        event.preventDefault();
+handlerCancelStudent(event) {
 
-        const classObject = event.data.classObject;
+    event.preventDefault();
+
+    const classObject = event.data.classObject;
+    const cancelButton = event.currentTarget;
+
+    classObject.showCancelConfirmation(cancelButton, function () {
 
         $(classObject.selectors.smsMainContainer).html(
             "<hum-student-management-filtertable></hum-student-management-filtertable>"
         );
-    }
+
+    });
+}
   // edit student
      initializeStudentForm(){
         const classObject=this;

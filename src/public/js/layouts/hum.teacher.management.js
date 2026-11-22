@@ -16,6 +16,7 @@ class HumTeacherManagement extends HTMLElement {
             addButton: "#hum_teacher_add_button",
 
             // Filter selectors
+            lengthFilter:"#hum_teacher_page_length",
             statusFilter: "#hum_teacher_filter_status",
             searchColumn: "#hum_teacher_filter_search_column",
             searchInput: "#hum_teacher_filter_search",
@@ -24,15 +25,18 @@ class HumTeacherManagement extends HTMLElement {
 
             // Add selectors
             addModal: "#hum_teacher_add_modal",
+            addTitle:"#modal_title_change",
+            addPara:"#modal_para_change",
             addForm: "#hum_teacher_add_form",
             addSaveButton: "#hum_teacher_add_save_button",
+            addId:"#hum_teacher_add_id",
             addName: "#hum_teacher_add_name",
             addSpecialty: "#hum_teacher_add_specialty",
             addEmail: "#hum_teacher_add_email",
             createdUserId: "#hum_teacher_created_user_id",
+              uniqueEmail:"#unique_Email",
 
-            // Edit selectors
-            editModal: "#hum_teacher_edit_modal",
+              editModal: "#hum_teacher_edit_modal",
             editForm: "#hum_teacher_edit_form",
             editId: "#hum_teacher_edit_id",
             editName: "#hum_teacher_edit_name",
@@ -40,6 +44,7 @@ class HumTeacherManagement extends HTMLElement {
             editEmail: "#hum_teacher_edit_email",
             editButton: ".teacher-edit-btn",
             editSaveButton: "#hum_teacher_edit_save_button",
+
 
             // View selectors
             viewModal: "#hum_teacher_view_modal",
@@ -60,11 +65,12 @@ class HumTeacherManagement extends HTMLElement {
 
         // Filters are applied only after clicking Apply.
         this.teacherAppliedFilters = {
+            teacherLength:10,
             teacherActiveFlag: "A",
             search: "",
             searchColumn: "TeacherName"
         };
-
+    this.length = this.teacherAppliedFilters.teacherLength;
         this.teacherDataTableConfig = {
             processing: true,
             serverSide: true,
@@ -98,7 +104,7 @@ class HumTeacherManagement extends HTMLElement {
                 {
                     data: "sno",
                     searchable: false,
-                    orderable: false,
+                    orderable: true,
                     visible: true
                 },
                 {
@@ -141,6 +147,7 @@ class HumTeacherManagement extends HTMLElement {
         try {
             this.getTeacherList();
             this.initializeTeacherValidation();
+            this.initializePopOver();
             this.initializeToolTip();
             this.bindAllRequiredEvents();
 
@@ -159,7 +166,13 @@ class HumTeacherManagement extends HTMLElement {
             { classObject: this },
             this.handlerAddTeacherClick
         );
-
+         
+        $(this).on(
+        "change",
+         this.selectors.lengthFilter,
+      { classObject: this },
+        this.handlerTeacherLengthChange
+);
         $(this).on(
             "click",
             this.selectors.addSaveButton,
@@ -211,6 +224,13 @@ class HumTeacherManagement extends HTMLElement {
             { classObject: this },
             this.handlerTeacherStatusClick
         );
+             $(this).on(
+            "input",
+            [this.selectors.searchInput,this.selectors.statusFilter,this.selectors.searchColumn].join(","),
+            { classObject: this },
+              this.disableReset
+        );
+
     }
 
    initializeToolTip() {
@@ -221,7 +241,70 @@ class HumTeacherManagement extends HTMLElement {
     });
   }
 
+    initializePopOver(){
+        let activeCancelButton = null;
 
+// Common Cancel Popover
+$(document).on("click", ".hum-confirm-cancel", function (event) {
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    activeCancelButton = this;
+
+  bootstrap.Popover.getInstance(this)?.dispose();
+const popover = new bootstrap.Popover(this, {
+    trigger: "manual",
+    placement: "top",
+    html: true,
+    sanitize: false,
+    container: "body",
+    customClass: "hum-cancel-popover",
+    content: `
+        <div class="hum-cancel-confirm-content">
+            <p>Are you sure you want to cancel this form?</p>
+
+            <div class="hum-cancel-confirm-actions">
+                <button type="button" class="hum-confirm-no">
+                    No
+                </button>
+
+                <button type="button" class="hum-confirm-yes">
+                    Yes
+                </button>
+            </div>
+        </div>
+    `
+});
+
+    popover.show();
+});
+
+// No button
+$(document).on("click", ".hum-confirm-no", function () {
+
+    if (activeCancelButton) {
+        bootstrap.Popover.getInstance(activeCancelButton)?.dispose();
+        activeCancelButton = null;
+    }
+});
+
+// Yes button
+$(document).on("click", ".hum-confirm-yes", function () {
+
+    if (!activeCancelButton) return;
+
+    const modalElement = activeCancelButton.closest(".modal");
+
+    bootstrap.Popover.getInstance(activeCancelButton)?.dispose();
+
+    activeCancelButton = null;
+
+    if (modalElement) {
+        bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+    }
+});
+    }
    initializeTeacherValidation() {  
     toastr.options = {
     closeButton: true,
@@ -235,93 +318,90 @@ class HumTeacherManagement extends HTMLElement {
 
     // Add Teacher Validation
     $(self).find(self.selectors.addForm).validate({
+        ignore:[],
         rules: {
             teacherName: {
                 required: true,
-                minlength: 3
+                minlength: 3,
+                 lettersonly:true
             },
             teacherSpecialty: {
-                required: true
+                required: true,
+                 lettersonly:true
             },
             teacherEmail: {
                 required: true,
-                email: true
+                validemail:true
+            },
+            unique_email_add:{
+                // required:true,
+                min:1
             }
         },
         messages: {
             teacherName: {
                 required: "Please enter teacher name.",
-                minlength: "Name must contain at least 3 characters."
+                minlength: "Name must contain at least 3 characters.",
+                  lettersonly: "Please enter letters only"
             },
             teacherSpecialty: {
-                required: "Please enter specialty."
+                required: "Please enter specialty.",
+                lettersonly: "Please enter letters only"
             },
             teacherEmail: {
                 required: "Please enter email address.",
-                email: "Please enter a valid email address."
+                 validemail: "Please enter a valid email address."
             }
         },
-        errorClass: "text-danger",
-        errorElement: "small"
-    });
-
-    // Edit Teacher Validation
-    $(self).find(self.selectors.editForm).validate({
-        rules: {
-            teacherName: {
-                required: true,
-                minlength: 3
-            },
-            teacherSpecialty: {
-                required: true
-            },
-            teacherEmail: {
-                required: true,
-                email: true
-            }
-        },
-        messages: {
-            teacherName: {
-                required: "Please enter teacher name.",
-                minlength: "Name must contain at least 3 characters."
-            },
-            teacherSpecialty: {
-                required: "Please enter specialty."
-            },
-            teacherEmail: {
-                required: "Please enter email address.",
-                email: "Please enter a valid email address."
-            }
-        },
-        errorClass: "text-danger",
-        errorElement: "small"
-    });
-}
-
-
-    // Apply filter button click
-    handlerApplyTeacherFilter(event) {
-
-        const classObject = event.data.classObject;
-
-        classObject.teacherAppliedFilters = {
-            teacherActiveFlag: $(classObject).find(classObject.selectors.statusFilter).val()||"A" ,
-
-            search: $(classObject).find(classObject.selectors.searchInput).val().trim(),
-
-            searchColumn: $(classObject).find(classObject.selectors.searchColumn).val() || "TeacherName"
-        };
-
-        // Reload the table from the first page with applied filters.
-        classObject.teacherDataTable.page.len(10).draw(true);
+            errorPlacement: function (error, element) { 
+             error.css("color", "red");
+           if (element.closest(".input-group").length) {
+        error.insertAfter(element.closest(".input-group"));
+    } else {
+        error.insertAfter(element);
     }
 
+        }
+    });
+
+ 
+}
+
+    // Apply filter button click
+ handlerApplyTeacherFilter(event) {
+    const classObject = event.data.classObject;
+
+    classObject.length = Number(
+        $(classObject).find(classObject.selectors.lengthFilter).val()
+    ) || 10;
+
+    classObject.teacherAppliedFilters = {
+        teacherLength: classObject.length,
+        teacherActiveFlag: $(classObject).find(classObject.selectors.statusFilter).val() || "A",
+        search: $(classObject).find(classObject.selectors.searchInput).val().trim(),
+        searchColumn: $(classObject).find(classObject.selectors.searchColumn).val() || "TeacherName"
+    };
+    
+    classObject.teacherDataTable.page.len(classObject.length).draw(true);
+}
+        disableReset(event){
+          const classObject = event.data.classObject;
+          const searchColumn= $(classObject).find(classObject.selectors.searchColumn).val();
+          const  search = $(classObject).find(classObject.selectors.searchInput).val();
+          const teacherActiveFlag= $(classObject).find(classObject.selectors.statusFilter).val();
+          if(search||searchColumn!=="TeacherName"|| teacherActiveFlag!=="A"){
+            $(classObject).find(classObject.selectors.resetFilterButton).removeClass("d-none");
+          }
+          else{
+            $(classObject).find(classObject.selectors.resetFilterButton).addClass("d-none");
+          }
+        }
 
     // Reset filter button click
     handlerResetTeacherFilter(event) {
 
         const classObject = event.data.classObject;
-
+          $(classObject).find(classObject.selectors.lengthFilter).val("10");
         $(classObject).find(classObject.selectors.statusFilter).val("A");
 
         $(classObject).find(classObject.selectors.searchColumn).val("TeacherName");
@@ -329,22 +409,27 @@ class HumTeacherManagement extends HTMLElement {
         $(classObject).find(classObject.selectors.searchInput).val("");
 
         classObject.teacherAppliedFilters = {
+             teacherLength:10,
             teacherActiveFlag: "A",
             search: "",
             searchColumn: "TeacherName"
         };
 
         // Reload the unfiltered list.
-        classObject.teacherDataTable.page.len(10).draw(true);
+        classObject.teacherDataTable.page.len(classObject.length).draw(true);
     }
-
+handlerTeacherLengthChange(event) {
+    const classObject = event.data.classObject;
+    classObject.length = Number($(event.currentTarget).val()) || 10;
+    classObject.teacherAppliedFilters.teacherLength = classObject.length;
+    classObject.teacherDataTable.page.len(classObject.length).draw(true);
+}
 
     // Format DataTables request for the Teacher API
-    teacherFormatRequestData(requestData) {
-           
+    teacherFormatRequestData(requestData) {      
         return {
             draw: requestData.draw,
-            length: requestData.length,
+            length: this.teacherAppliedFilters.teacherLength,
             start: requestData.start,
 
             teacherFilter: {
@@ -369,11 +454,16 @@ class HumTeacherManagement extends HTMLElement {
     handlerAddTeacherClick(event) {
 
         const classObject = event.data.classObject;
-
         const addForm = $(classObject).find(classObject.selectors.addForm)[0];
-
         if (addForm) {
             addForm.reset();
+
+                 const validator = $(addForm).validate();
+        validator.resetForm();
+
+        // Remove validation error styles
+        $(addForm).find(".is-invalid").removeClass("is-invalid");
+        $(addForm).find(".error").removeClass("error");
         }
 
         $(classObject).find(classObject.selectors.addModal).modal("show");
@@ -384,34 +474,28 @@ class HumTeacherManagement extends HTMLElement {
     handlerAddTeacherSubmit(event) {
 
         event.preventDefault();
-
         const classObject = event.data.classObject;
-
         classObject.saveTeacher();
     }
 
 
     // Save Teacher
     saveTeacher() {
-
-        const classObject = this;
-
+         $("#unique_email_add").val("1")
+         
+        if($("#hum_teacher_add_form").valid()){
+            const classObject = this;
         const addForm = $(this).find(this.selectors.addForm);
-         if (!addForm.valid()) {
-            toastr.warning("Please fill in all required fields.");
-            return;
-        }
+  
 
         const teacherData = {
-            teacherId: null,
+            teacherId:$(this).find(classObject.selectors.addId).val()||null,
 
             teacherName: $(this).find(classObject.selectors.addName).val().trim(),
 
-            teacherSpecialty: $(this)
-                .find(classObject.selectors.addSpecialty) .val().trim(),
+            teacherSpecialty: $(this).find(classObject.selectors.addSpecialty) .val().trim(),
 
-            teacherEmail: $(this)
-                .find(classObject.selectors.addEmail) .val().trim(),
+            teacherEmail: $(this).find(classObject.selectors.addEmail) .val().trim(),
 
             teacherCreatedUserId: 1
         };
@@ -436,10 +520,21 @@ class HumTeacherManagement extends HTMLElement {
               $(classObject) .find(classObject.selectors.addForm).validate().resetForm();
 
                     // Reload the table after saving.
-                    classObject.teacherDataTable.page.len(10).draw(true);
+                    classObject.teacherDataTable.page.len(classObject.length).draw(true);
 
                 } else {
-                    toastr.error(response.data);
+                  if(response.data==="Duplicate Email found"){
+                        $("#unique_email_add").rules("add", {
+                            messages: {
+                                min: "Email already exsist"
+                            }
+                        });     
+                        $("#unique_email_add").val(0)
+                        $("#hum_teacher_add_form").valid()      
+                     }
+                     else{
+                        toastr.error(response.data);
+                     }
                 }
             },
 
@@ -454,16 +549,14 @@ class HumTeacherManagement extends HTMLElement {
             }
         });
     }
-
+        }
+        
 
     // View Teacher button click
     handlerViewTeacherClick(event) {
 
         const classObject = event.data.classObject;
-
-        const teacherId = $(event.currentTarget)
-            .data("teacher-id");
-
+        const teacherId = $(event.currentTarget).data("teacher-id");
         classObject.viewTeacher(teacherId);
     }
 
@@ -472,32 +565,23 @@ class HumTeacherManagement extends HTMLElement {
     handlerEditTeacherClick(event) {
 
         const classObject = event.data.classObject;
-
-        const teacherId = $(event.currentTarget)
-            .data("teacher-id");
-
-        classObject.editTeacher(teacherId);
+        const teacherId = $(event.currentTarget).attr("data-teacher-id");
+         classObject.editTeacher(teacherId);
+        $(classObject).find(classObject.selectors.addTitle).text("Edit Teacher")
+        $(classObject).find(classObject.selectors.addpara).text("Enter the details below to add a new teacher")
+        $(classObject).find(classObject.selectors.addSaveButton).text("Update")  
     }
 
 
     // Edit Teacher form submit
-    handlerEditTeacherSubmit(event) {
 
-        event.preventDefault();
-
-        const classObject = event.data.classObject;
-
-        classObject.updateTeacher();
-    }
 
 
     // Active/Inactive status button click
     handlerTeacherStatusClick(event) {
 
         const classObject = event.data.classObject;
-
-        const teacherId = $(event.currentTarget)
-            .data("teacher-id");
+        const teacherId = $(event.currentTarget).data("teacher-id");
 
        
 Swal.fire({
@@ -580,7 +664,6 @@ Swal.fire({
 
     // Get Teacher details for Edit
     editTeacher(teacherId) {
-
         const classObject = this;
 
         $.ajax({
@@ -594,15 +677,15 @@ Swal.fire({
 
                     const teacher = response.data;
 
-                    $(classObject).find(classObject.selectors.editId).val(teacher.teacherId);
+                    $(classObject).find(classObject.selectors.addId).val(teacher.teacherId);
 
-                    $(classObject).find(classObject.selectors.editName).val(teacher.teacherName);
+                    $(classObject).find(classObject.selectors.addName).val(teacher.teacherName);
 
-                    $(classObject) .find(classObject.selectors.editSpecialty).val(teacher.teacherSpecialty);
+                    $(classObject) .find(classObject.selectors.addSpecialty).val(teacher.teacherSpecialty);
 
-                    $(classObject).find(classObject.selectors.editEmail) .val(teacher.teacherEmail);
+                    $(classObject).find(classObject.selectors.addEmail) .val(teacher.teacherEmail);
 
-                    $(classObject).find(classObject.selectors.editModal).modal("show");
+                    $(classObject).find(classObject.selectors.addModal).modal("show");
 
                 } else {
                     toastr.error(response.data);
@@ -623,73 +706,11 @@ Swal.fire({
 
 
     // Update Teacher
-    updateTeacher() {
-
-        const classObject = this;
-
-        const editForm = $(this).find(this.selectors.editForm);
-
-    if (!editForm.valid()) {
-        toastr.warning("Please correct the highlighted fields.");
-        return;
-    }
-
-        const teacherData = {
-            teacherId: Number($(this) .find(classObject.selectors.editId).val()),
-
-            teacherName: $(this).find(classObject.selectors.editName).val().trim(),
-
-            teacherSpecialty: $(this).find(classObject.selectors.editSpecialty).val().trim(),
-
-            teacherEmail: $(this).find(classObject.selectors.editEmail).val().trim(),
-
-            teacherCreatedUserId: 1
-        };
-
-
-        $.ajax({
-            url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/teacher/save",
-            type: "POST",
-            contentType: "application/json",
-            dataType: "json",
-            data: JSON.stringify(teacherData),
-
-            success: function (response) {
-
-                if (response.status === "Success") {
-
-                    toastr.success(response.data);
-
-                    $(classObject).find(classObject.selectors.editModal).modal("hide");
-
-                    $(classObject).find(classObject.selectors.editForm)[0] .reset();
-
-                    $(classObject).find(classObject.selectors.editForm).validate().resetForm();
-
-                    // Reload the table after updating.
-                    classObject.teacherDataTable.page.len(10).draw(true);
-
-                } else {
-                    toastr.error(response.data);
-                }
-            },
-
-            error: function (xhr) {
-
-                console.error(
-                    "Update Teacher Error:",
-                    xhr.responseText
-                );
-
-                toastr.error("Unable to update teacher. Please check the entered details.");
-            }
-        });
-    }
+  
 
 
     // Change Teacher Active/Inactive status
     changeTeacherStatus(teacherId) {
-
         const classObject = this;
 
         $.ajax({
@@ -702,7 +723,7 @@ Swal.fire({
                 if (response.status === "Success") {
                    toastr.success("Successfully Changed");
                     // Reload without resetting the current page.
-                   classObject.teacherDataTable.page.len(10).draw(true);
+                   classObject.teacherDataTable.page.len(classObject.length).draw(true);
 
                 } else {
                     toastr.error(response.data);

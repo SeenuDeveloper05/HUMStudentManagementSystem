@@ -82,6 +82,9 @@ class HumSidebar extends HTMLElement {
             const selectedPage=$(clickedLink).attr("data-page");
 
             switch(selectedPage){
+                  case "dashboard":
+                  $(classObject.selectors.smsMainContainer).html("<hum-sms-dashboard></hum-sms-dashboard>");    
+                break;
        
                 case "teacher":
                       $( classObject.selectors.smsMainContainer).html("<hum-teacher-management></hum-teacher-management>" );
@@ -108,8 +111,7 @@ class HumSidebar extends HTMLElement {
                     break;
 
                 default:
-                      $(classObject.selectors.smsMainContainer).html("<hum-sms-dashboard></hum-sms-dashboard>");
-                     
+                      $(classObject.selectors.smsMainContainer).html("<hum-sms-dashboard></hum-sms-dashboard>");      
             }
 
     }

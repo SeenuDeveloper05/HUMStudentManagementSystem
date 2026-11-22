@@ -78,23 +78,31 @@ class HumDailyAttendance extends HTMLElement{
         '<"col-md-6 d-flex justify-content-md-end hum-custom-pagination"p>' +
         '>',
              
-       ajax:{
-             url:"https://dev-api.humhealth.com/StudentManagementSystemAPI/student/list",
-             type:"POST",
-             dataType:"json",
-             contentType: "application/json",
+ajax: (requestData, callback) => {
+    const classObject = this;
 
-             data:(requestData)=>{
-                 return JSON.stringify(
-                    this.attendanceStudentFormatRequestData(requestData)
-                   );
-             },
+    $.ajax({
+        url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/student/list",
+        type: "POST",
+        dataType: "json",
+        contentType: "application/json",
+        data: JSON.stringify(classObject.attendanceStudentFormatRequestData(requestData))
+    })
+    .then(async (jsonResponse) => {
+        const rows = await classObject.displayAttendanceStudentDataList(jsonResponse);
+                    
 
-             dataSrc: (jsonResponse)=>{
-              return this.displayAttendanceStudentDataList(jsonResponse);
-            
-            }
-       },
+        callback({
+            draw: jsonResponse.draw ?? requestData.draw,
+            recordsTotal: jsonResponse.recordsTotal,
+            recordsFiltered: jsonResponse.recordsFiltered,
+            data: rows
+        });
+    })
+    .catch(() => {
+        callback({ draw: requestData.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+    });
+},
 
        columns:[
          {
@@ -194,6 +202,65 @@ class HumDailyAttendance extends HTMLElement{
         $(classObject.selectors.attendanceDate)
             .flatpickr(datepickerConfig);
       }
+       
+checkAttendance(event) {
+
+    const classObject = this;
+
+    return new Promise((resolve, reject) => {
+
+        $.ajax({
+            url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/attendance/list/byday",
+            method: "POST",
+            dataType: "json",
+            contentType: "application/json",
+
+            data: JSON.stringify({
+                draw: 1,
+                length: 50,
+                start: 0,
+
+                attendanceFilter: {
+                    date: $(classObject.selectors.attendanceDate).val() || null,
+                    statusFlag: "",
+                    studentBranchOfStudy: $(classObject.selectors.attendanceBranch).val() || "",
+                    sickLeaveStatusFlag: "",
+                    activitieStatusFlag: ""
+                },
+
+                order: {
+                    column: "sno",
+                    type: ""
+                },
+
+                search: "",
+                searchColumn: "",
+                filterBy: "",
+                filterValue: ""
+            }),
+
+            success: function(res) {
+
+                if (res.status === "Success") {
+
+                    if (res.data.length === 0) {
+                        resolve(true);
+                    } else {
+                        resolve(false);
+                    }
+
+                } else {
+                    reject(res);
+                }
+            },
+
+            error: (error) => {
+                console.log(error);
+                reject(error);
+            }
+        });
+    });
+}
 
       // Save Attendance is shown only in the Daily Attendance tab
       handlerAttendanceTabClick(event){
@@ -367,6 +434,7 @@ class HumDailyAttendance extends HTMLElement{
                }
                else if(successCount > 0){
                   toastr.success(successCount +"Attendance records saveed successfully");
+                   classObject.attendanceDataTable.ajax.reload(null, false);
                }
                else{
                   toastr.warning(response.data);
@@ -424,10 +492,25 @@ attendanceStudentFormatRequestData(requestData){
    }
 
   displayAttendanceStudentDataList(response){
-      const studentDataArray =[];
      if(response.status ==="Success"){
-        let index=1;
+        return this.checkAttendance().then((res)=>{
+            if(res){
+             return this.verifiedAttendancelist(response);
+             
+            } else {
+                return []
+            }
+        }).catch(()=>{
+            return [];
+        })   
 
+         }
+          
+     
+  }
+       verifiedAttendancelist(response){
+const studentDataArray = []
+        let index=1;
         for(const res of response.data){
             const data={};
 
@@ -482,9 +565,8 @@ attendanceStudentFormatRequestData(requestData){
              data["ecaleave"] = this.forLeaveCheckbox(record, "eca");
              studentDataArray.push(data);
         }
+        return studentDataArray;
      }
-     return studentDataArray;
-  }
 
   forAttendanceStatus(record){
      const presentClass = record.attendanceStatusFlag === "P" ? "is-present" : "";

@@ -207,7 +207,37 @@ initializeToolTip() {
     });
 
 }
+disconnectedCallback() {
 
+    // Dispose tooltips attached to dynamically generated buttons
+    $(this).find('[data-bs-toggle="tooltip"]').each(function () {
+
+        const tooltip = bootstrap.Tooltip.getInstance(this);
+
+        if (tooltip) {
+            tooltip.hide();
+            tooltip.dispose();
+        }
+
+        // Remove any remaining tooltip reference
+        const tooltipId = this.getAttribute("aria-describedby");
+
+        if (tooltipId) {
+            document.getElementById(tooltipId)?.remove();
+        }
+
+    });
+
+    // Dispose delegated tooltip instance on custom element
+    const tooltipInstance = bootstrap.Tooltip.getInstance(this);
+
+    if (tooltipInstance) {
+        tooltipInstance.hide();
+        tooltipInstance.dispose();
+    }
+
+}
+  
  initializeToastr() {
     toastr.options = {
         closeButton: true,
