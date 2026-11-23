@@ -22,6 +22,7 @@ class HumTeacherManagement extends HTMLElement {
             searchInput: "#hum_teacher_filter_search",
             applyFilterButton: "#hum_teacher_filter_apply_button",
             resetFilterButton: "#hum_teacher_filter_reset_button",
+            filterChanges:"#filter_changes_lable",
 
             // Add selectors
             addModal: "#hum_teacher_add_modal",
@@ -159,78 +160,18 @@ class HumTeacherManagement extends HTMLElement {
 
     // Bind all required events
     bindAllRequiredEvents() {
-
-        $(this).on(
-            "click",
-            this.selectors.addButton,
-            { classObject: this },
-            this.handlerAddTeacherClick
-        );
-         
-        $(this).on(
-        "change",
-         this.selectors.lengthFilter,
-      { classObject: this },
-        this.handlerTeacherLengthChange
-);
-        $(this).on(
-            "click",
-            this.selectors.addSaveButton,
-            { classObject: this },
-            this.handlerAddTeacherSubmit
-        );
-
-        $(this).on(
-            "click",
-            this.selectors.viewButton,
-            { classObject: this },
-            this.handlerViewTeacherClick
-        );
-
-        $(this).on(
-            "click",
-            this.selectors.editButton,
-            { classObject: this },
-            this.handlerEditTeacherClick
-        );
-
-        $(this).on(
-            "click",
-            this.selectors.editSaveButton,
-            { classObject: this },
-            this.handlerEditTeacherSubmit
-        );
-
+        $(this).on("click",this.selectors.addButton,{ classObject: this },this.handlerAddTeacherClick);
+        $(this).on("click",this.selectors.addSaveButton,{ classObject: this },this.handlerAddTeacherSubmit);
+        $(this).on("click",this.selectors.viewButton,{ classObject: this },this.handlerViewTeacherClick);
+        $(this).on("click",this.selectors.editButton,{ classObject: this },this.handlerEditTeacherClick);
         // Apply filters
-        $(this).on(
-            "click",
-            this.selectors.applyFilterButton,
-            { classObject: this },
-            this.handlerApplyTeacherFilter
-        );
-
+        $(this).on("click",this.selectors.applyFilterButton,{ classObject: this },this.handlerApplyTeacherFilter);
         // Reset filters
-        $(this).on(
-            "click",
-            this.selectors.resetFilterButton,
-            { classObject: this },
-            this.handlerResetTeacherFilter
-        );
-
+        $(this).on("click",this.selectors.resetFilterButton,{ classObject: this },this.handlerResetTeacherFilter);
         // Change Active/Inactive status
-        $(this).on(
-            "click",
-            this.selectors.statusButton,
-            { classObject: this },
-            this.handlerTeacherStatusClick
-        );
-             $(this).on(
-            "input",
-            [this.selectors.searchInput,this.selectors.statusFilter,this.selectors.searchColumn].join(","),
-            { classObject: this },
-              this.disableReset
-        );
-
+        $(this).on("click",this.selectors.statusButton,{ classObject: this },this.handlerTeacherStatusClick);
+        $(this).on("input",[this.selectors.searchInput,this.selectors.statusFilter,this.selectors.searchColumn].join(","),{ classObject: this },this.disableReset);
+        $(this).on("input change",this.selectors.addForm,{ classObject: this },this.handlerAddFormInput);
     }
 
    initializeToolTip() {
@@ -243,46 +184,42 @@ class HumTeacherManagement extends HTMLElement {
 
     initializePopOver(){
         let activeCancelButton = null;
-
 // Common Cancel Popover
 $(document).on("click", ".hum-confirm-cancel", function (event) {
-
     event.preventDefault();
     event.stopImmediatePropagation();
 
     activeCancelButton = this;
+        bootstrap.Popover.getInstance(this)?.dispose();
+        const popover = new bootstrap.Popover(this, {
+            trigger: "manual",
+            placement: "top",
+            html: true,
+            sanitize: false,
+            container: "body",
+            customClass: "hum-cancel-popover",
+            content: `
+                <div class="hum-cancel-confirm-content">
+                    <p>Are you sure you want to cancel this form?</p>
 
-  bootstrap.Popover.getInstance(this)?.dispose();
-const popover = new bootstrap.Popover(this, {
-    trigger: "manual",
-    placement: "top",
-    html: true,
-    sanitize: false,
-    container: "body",
-    customClass: "hum-cancel-popover",
-    content: `
-        <div class="hum-cancel-confirm-content">
-            <p>Are you sure you want to cancel this form?</p>
+                    <div class="hum-cancel-confirm-actions">
+                        <button type="button" class="hum-confirm-no">
+                            No
+                        </button>
 
-            <div class="hum-cancel-confirm-actions">
-                <button type="button" class="hum-confirm-no">
-                    No
-                </button>
+                        <button type="button" class="hum-confirm-yes">
+                            Yes
+                        </button>
+                    </div>
+                </div>
+            `
+        });
 
-                <button type="button" class="hum-confirm-yes">
-                    Yes
-                </button>
-            </div>
-        </div>
-    `
-});
-
-    popover.show();
-});
+            popover.show();
+        });
 
 // No button
 $(document).on("click", ".hum-confirm-no", function () {
-
     if (activeCancelButton) {
         bootstrap.Popover.getInstance(activeCancelButton)?.dispose();
         activeCancelButton = null;
@@ -293,13 +230,9 @@ $(document).on("click", ".hum-confirm-no", function () {
 $(document).on("click", ".hum-confirm-yes", function () {
 
     if (!activeCancelButton) return;
-
     const modalElement = activeCancelButton.closest(".modal");
-
     bootstrap.Popover.getInstance(activeCancelButton)?.dispose();
-
     activeCancelButton = null;
-
     if (modalElement) {
         bootstrap.Modal.getOrCreateInstance(modalElement).hide();
     }
@@ -315,7 +248,6 @@ $(document).on("click", ".hum-confirm-yes", function () {
 };
 
     const self = this;
-
     // Add Teacher Validation
     $(self).find(self.selectors.addForm).validate({
         ignore:[],
@@ -371,9 +303,7 @@ $(document).on("click", ".hum-confirm-yes", function () {
  handlerApplyTeacherFilter(event) {
     const classObject = event.data.classObject;
 
-    classObject.length = Number(
-        $(classObject).find(classObject.selectors.lengthFilter).val()
-    ) || 10;
+    classObject.length = Number($(classObject).find(classObject.selectors.lengthFilter).val()) || 10;
 
     classObject.teacherAppliedFilters = {
         teacherLength: classObject.length,
@@ -391,9 +321,11 @@ $(document).on("click", ".hum-confirm-yes", function () {
           const teacherActiveFlag= $(classObject).find(classObject.selectors.statusFilter).val();
           if(search||searchColumn!=="TeacherName"|| teacherActiveFlag!=="A"){
             $(classObject).find(classObject.selectors.resetFilterButton).removeClass("d-none");
+            $(classObject).find(classObject.selectors.filterChanges).text(" Filter conditions changed, Click submit.");
           }
           else{
             $(classObject).find(classObject.selectors.resetFilterButton).addClass("d-none");
+             $(classObject).find(classObject.selectors.filterChanges).text("");
           }
         }
 
@@ -401,6 +333,7 @@ $(document).on("click", ".hum-confirm-yes", function () {
     handlerResetTeacherFilter(event) {
 
         const classObject = event.data.classObject;
+           classObject.length = 10;
           $(classObject).find(classObject.selectors.lengthFilter).val("10");
         $(classObject).find(classObject.selectors.statusFilter).val("A");
 
@@ -417,12 +350,16 @@ $(document).on("click", ".hum-confirm-yes", function () {
 
         // Reload the unfiltered list.
         classObject.teacherDataTable.page.len(classObject.length).draw(true);
+          $(classObject).find(classObject.selectors.resetFilterButton).addClass("d-none");
     }
-handlerTeacherLengthChange(event) {
+      handlerAddFormInput(event) {
+
     const classObject = event.data.classObject;
-    classObject.length = Number($(event.currentTarget).val()) || 10;
-    classObject.teacherAppliedFilters.teacherLength = classObject.length;
-    classObject.teacherDataTable.page.len(classObject.length).draw(true);
+
+    const form = $(classObject).find(classObject.selectors.addForm);
+
+    const hasValue = form.find("input:not([type='hidden'])").toArray().some(element => $(element).val().trim() !== "");
+      form.find(classObject.selectors.addSaveButton).prop("disabled", !hasValue);
 }
 
     // Format DataTables request for the Teacher API
@@ -441,26 +378,20 @@ handlerTeacherLengthChange(event) {
                 column: "sno",
                 type: "desc"
             },
-
             search:this.teacherAppliedFilters.search ,
-
-            searchColumn:
-                this.teacherAppliedFilters.searchColumn
+            searchColumn:this.teacherAppliedFilters.searchColumn
         };
     }
 
 
     // Add Teacher button click
     handlerAddTeacherClick(event) {
-
         const classObject = event.data.classObject;
         const addForm = $(classObject).find(classObject.selectors.addForm)[0];
         if (addForm) {
             addForm.reset();
-
-                 const validator = $(addForm).validate();
-        validator.resetForm();
-
+             const validator = $(addForm).validate();
+              validator.resetForm();
         // Remove validation error styles
         $(addForm).find(".is-invalid").removeClass("is-invalid");
         $(addForm).find(".error").removeClass("error");
@@ -472,21 +403,16 @@ handlerTeacherLengthChange(event) {
 
     // Add Teacher form submit
     handlerAddTeacherSubmit(event) {
-
         event.preventDefault();
         const classObject = event.data.classObject;
         classObject.saveTeacher();
     }
-
-
     // Save Teacher
     saveTeacher() {
-         $("#unique_email_add").val("1")
-         
+         $("#unique_email_add").val("1")  
         if($("#hum_teacher_add_form").valid()){
             const classObject = this;
         const addForm = $(this).find(this.selectors.addForm);
-  
 
         const teacherData = {
             teacherId:$(this).find(classObject.selectors.addId).val()||null,
@@ -512,13 +438,9 @@ handlerTeacherLengthChange(event) {
                 if (response.status === "Success") {
 
                     toastr.success(response.data);
-
                     $(classObject) .find(classObject.selectors.addModal).modal("hide");
-
                     $(classObject) .find(classObject.selectors.addForm)[0] .reset();
-
-              $(classObject) .find(classObject.selectors.addForm).validate().resetForm();
-
+                    $(classObject) .find(classObject.selectors.addForm).validate().resetForm();
                     // Reload the table after saving.
                     classObject.teacherDataTable.page.len(classObject.length).draw(true);
 
@@ -539,12 +461,10 @@ handlerTeacherLengthChange(event) {
             },
 
             error: function (xhr) {
-
                 console.error(
                     "Save Teacher Error:",
                     xhr.responseText
                 );
-
                 toastr.error("Unable to save teacher. Please try again.");
             }
         });
@@ -554,7 +474,6 @@ handlerTeacherLengthChange(event) {
 
     // View Teacher button click
     handlerViewTeacherClick(event) {
-
         const classObject = event.data.classObject;
         const teacherId = $(event.currentTarget).data("teacher-id");
         classObject.viewTeacher(teacherId);
@@ -563,7 +482,6 @@ handlerTeacherLengthChange(event) {
 
     // Edit Teacher button click
     handlerEditTeacherClick(event) {
-
         const classObject = event.data.classObject;
         const teacherId = $(event.currentTarget).attr("data-teacher-id");
          classObject.editTeacher(teacherId);
@@ -584,29 +502,29 @@ handlerTeacherLengthChange(event) {
         const teacherId = $(event.currentTarget).data("teacher-id");
 
        
-Swal.fire({
-    title: "Are you sure?",
-    text: "Do you want to change the teacher status?",
-   
-    height: "300px",
-    padding: "1rem",
-    showCancelButton: true,
-    confirmButtonText: "Yes",
-    cancelButtonText: "No",
-    reverseButtons: true,
-    customClass: {
-        popup: "small-swal-popup",
-        title: "small-swal-title",
-        htmlContainer: "small-swal-text",
-        confirmButton: "btn btn-sm btn-primary",
-        cancelButton: "btn btn-sm btn-secondary"
-    },
-    buttonsStyling: false
-}).then((result) => {
-    if (result.isConfirmed) {
-        classObject.changeTeacherStatus(teacherId);
-    }
-});
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: "Do you want to change the teacher status?",
+                
+                    height: "300px",
+                    padding: "1rem",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                    cancelButtonText: "No",
+                    reverseButtons: true,
+                    customClass: {
+                        popup: "small-swal-popup",
+                        title: "small-swal-title",
+                        htmlContainer: "small-swal-text",
+                        confirmButton: "btn btn-sm btn-primary",
+                        cancelButton: "btn btn-sm btn-secondary"
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        classObject.changeTeacherStatus(teacherId);
+                    }
+                });
     }
 
 
@@ -840,7 +758,6 @@ Swal.fire({
     getTeacherList() {
 
         if (!this.teacherDataTable) {
-
             this.teacherDataTable = $(this)
                 .find(this.selectors.teacherTable)
                 .DataTable(this.teacherDataTableConfig);
@@ -848,7 +765,4 @@ Swal.fire({
     }
 }
 
-customElements.define(
-    "hum-teacher-management",
-    HumTeacherManagement
-);
+customElements.define("hum-teacher-management",HumTeacherManagement);

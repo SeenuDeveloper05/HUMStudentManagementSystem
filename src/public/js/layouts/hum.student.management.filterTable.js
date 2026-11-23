@@ -21,6 +21,7 @@ class HumStudentManagementFiltertable extends HTMLElement{
     genderFilter: "#hum_student_gender_filter",
     residenceFilter: "#hum_student_residence_filter",
     statusFilter: "#hum_student_status_filter",
+    lengthFilter:"#hum_student_page_length",
 
     studentTable: "#hum_student_table",
     studentTableBody: "#hum_student_table_body",
@@ -41,7 +42,7 @@ class HumStudentManagementFiltertable extends HTMLElement{
       this.studentDataTableConfig={
             processing:true,
             serverSide:true,
-            pageLength:10,
+            length:10,
 
             searching: false,
 
@@ -172,7 +173,8 @@ class HumStudentManagementFiltertable extends HTMLElement{
              this.selectors.departmentFilter,
              this.selectors.genderFilter,
              this.selectors.residenceFilter,
-             this.selectors.statusFilter
+             this.selectors.statusFilter,
+             this.selectors.lengthFilter
           ].join(","),
           {classObject:this},
           this.handlerStudentFilter
@@ -199,13 +201,14 @@ class HumStudentManagementFiltertable extends HTMLElement{
       }
 
 initializeToolTip() {
-
-    new bootstrap.Tooltip(this, {
-        selector: '[data-bs-toggle="tooltip"]',
-        container: 'body',
-        trigger: 'hover focus'
+    $(this).on("mouseenter", '[data-bs-toggle="tooltip"]', function () {
+        if (!bootstrap.Tooltip.getInstance(this)) {
+            new bootstrap.Tooltip(this, {
+                container: 'body',
+                trigger: 'hover focus'
+            });
+        }
     });
-
 }
 disconnectedCallback() {
 
@@ -254,17 +257,17 @@ disconnectedCallback() {
         $(classObject.selectors.smsMainContainer).html("<hum-student-management-register></hum-student-management-register>")
 
       }
+handlerStudentSearch(event) {
+    const classObject = event.data.classObject;
+    const length = Number($(classObject.selectors.lengthFilter).val()) || 10;
+    classObject.studentDataTable.page.len(length).draw(true);
+}
 
-      handlerStudentSearch(event){
-           const classObject = event.data.classObject;
-
-          classObject.studentDataTable.page.len(10).draw(true);
-      }
-
-      handlerStudentFilter(event){
-           const classObject = event.data.classObject;
-           classObject.studentDataTable.page.len(10).draw(true);
-      }
+    handlerStudentFilter(event) {
+    const classObject = event.data.classObject;
+    const length = Number($(classObject.selectors.lengthFilter).val()) || 10;
+    classObject.studentDataTable.page.len(length).draw(true);
+}
 
       // View Student Button
    handlerViewStudentClick(event) {
@@ -352,7 +355,7 @@ disconnectedCallback() {
 
         this.studentFilterRequest ={
            draw: requestData.draw,
-           length:requestData.length,
+           length: Number($(classObject.selectors.lengthFilter).val()) || 10,
            start:requestData.start,
 
            filter: {

@@ -13,8 +13,10 @@ this.selectors = {
     filterCompliance: "#hum_quarterly_filter_compliance",
     filterBranch: "#hum_quarterly_filter_branch",
     filterStudent: "#hum_quarterly_filter_student",
+    filterLength:"#hum_quarter_page_length",
    applyFilterButton: "#hum_quarterly_filter_apply_button",
    resetFilterButton: "#hum_quarterly_filter_reset_button",
+   filterChanges:"#filter_changes_lable",
 
     // Table
     attendanceTable: "#hum_quarterly_attendance_table",
@@ -63,6 +65,7 @@ this.selectors = {
     // const fullName="";
     // Filters are applied only after clicking Apply.
 this.quarterlyAppliedFilters = {
+     length: 10,
     quarter: null,
     complianceReportFilter: "",
     studentBranchOfStudy: "",
@@ -73,7 +76,7 @@ this.quarterlyAppliedFilters = {
     this.quarterlyAttendanceDataTableConfig={
          processing:true,
          serverSide:true,
-         pageLength:50,
+         pageLength:10,
          searching: true,
           dom:
              't' +
@@ -197,6 +200,22 @@ this.quarterlyAppliedFilters = {
    .on("click",this.selectors.applyFilterButton,{classObject: this},this.handlerApplyQuarterlyFilter)
     // Reset filters
    .on("click", this.selectors.resetFilterButton,{classObject: this},this.handlerResetQuarterlyFilter)
+   // Reset button visibility
+   .on(
+            "input change",
+            [
+                this.selectors.filterQuarter,
+                this.selectors.filterYear,
+                this.selectors.filterCompliance,
+                this.selectors.filterBranch,
+                this.selectors.filterStudent,
+                this.selectors.filterLength
+            ].join(","),
+            { classObject: this },
+            this.handlerQuarterlyResetVisibility
+);
+   // Page length
+//    .on("change", this.selectors.filterLength,{classObject: this},this.handlerQuarterlyLengthChange)
 }
 
 initializeToolTip() {
@@ -223,28 +242,28 @@ handlerApplyQuarterlyFilter(event) {
 
     const classObject = event.data.classObject;
 
+    const length = Number($(classObject).find(classObject.selectors.filterLength).val()) || 10;
+
     const quarter = $(classObject)
         .find(classObject.selectors.filterQuarter).val();
 
-    const year = $(classObject)
-        .find(classObject.selectors.filterYear).val();
+    const year = $(classObject).find(classObject.selectors.filterYear).val();
 
     const compliance = $(classObject)
         .find(classObject.selectors.filterCompliance).val();
 
     classObject.quarterlyAppliedFilters = {
+        length: length,
         quarter: (quarter && year) ? quarter + "-" + year : null,
         complianceReportFilter: compliance || "",
-        studentBranchOfStudy: $(classObject).find(classObject.selectors.filterBranch).val() || "",
-        search: $(classObject).find(classObject.selectors.filterStudent).val().trim(),
+        studentBranchOfStudy: $(classObject)
+            .find(classObject.selectors.filterBranch).val() || "",
+        search: $(classObject)
+            .find(classObject.selectors.filterStudent).val().trim(),
         searchColumn: "Fullname"
-        
     };
 
-    console.log("Applied Quarterly Filters:",
-        classObject.quarterlyAppliedFilters);
-
-    classObject.quarterlyAttendanceDataTable.page.len(50).draw(true);
+    classObject.quarterlyAttendanceDataTable.page.len(length).draw(true);
 }
 
 
@@ -254,16 +273,14 @@ handlerResetQuarterlyFilter(event) {
     const classObject = event.data.classObject;
 
     $(classObject).find(classObject.selectors.filterQuarter).val("");
-
-    $(classObject).find(classObject.selectors.filterYear).val("");
-
+  $(classObject).find(classObject.selectors.filterYear).val(String(new Date().getFullYear()));
     $(classObject).find(classObject.selectors.filterCompliance).val("");
-
     $(classObject).find(classObject.selectors.filterBranch).val("");
-
     $(classObject).find(classObject.selectors.filterStudent).val("");
+    $(classObject).find(classObject.selectors.filterLength).val(10);
 
     classObject.quarterlyAppliedFilters = {
+        length: 10,
         quarter: null,
         complianceReportFilter: "",
         studentBranchOfStudy: "",
@@ -271,8 +288,51 @@ handlerResetQuarterlyFilter(event) {
         searchColumn: "Fullname"
     };
 
-    classObject.quarterlyAttendanceDataTable.page.len(50).draw(true);
+    const length = Number(
+        $(classObject).find(classObject.selectors.filterLength).val()
+    ) || 10;
+
+    classObject.quarterlyAttendanceDataTable.page.len(length).draw(true);
+
+    // Hide reset button
+    $(classObject.selectors.resetFilterButton).addClass("d-none");
 }
+
+handlerQuarterlyResetVisibility(event) {
+
+    const classObject = event.data.classObject;
+    const today = new Date();
+    const defaultYear = String(today.getFullYear());
+    const quarter = $(classObject.selectors.filterQuarter).val() || "";
+    const year = $(classObject.selectors.filterYear).val() || "";
+    const compliance = $(classObject.selectors.filterCompliance).val() || "";
+    const branch = $(classObject.selectors.filterBranch).val() || "";
+    const student = $(classObject.selectors.filterStudent).val().trim();
+    const length = Number($(classObject.selectors.filterLength).val()) || 10;
+
+    if (
+        quarter !== "" ||
+        year !== defaultYear ||
+        compliance !== "" ||
+        branch !== "" ||
+        student !== "" ||
+        length !== 10
+    ) {
+        $(classObject.selectors.resetFilterButton).removeClass("d-none");
+         $(classObject).find(classObject.selectors.filterChanges).text(" Filter conditions changed, Click submit.");
+    }
+    else {
+        $(classObject.selectors.resetFilterButton).addClass("d-none");
+         $(classObject).find(classObject.selectors.filterChanges).text("");
+    }
+}
+// Page length dropdown change
+// handlerQuarterlyLengthChange(event){
+//     const classObject = event.data.classObject;
+//     const length = Number($(event.currentTarget).val()) || 50;
+
+//     classObject.quarterlyAttendanceDataTable.page.len(length).draw(true);
+// }
 
     handlerViewQuarterlyClick(event){
         const classObject =event.data.classObject;
@@ -538,7 +598,7 @@ quarterlyAttendanceFormatRequestData(requestData) {
 
     this.quarterlyAttendanceFilterRequest = {
         draw: requestData.draw,
-        length: requestData.length,
+        length: Number($(this).find(this.selectors.filterLength).val()) || requestData.length || 10,
         start: requestData.start,
 
         attendanceReportFilter: {

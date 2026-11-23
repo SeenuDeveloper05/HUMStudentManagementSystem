@@ -75,6 +75,12 @@ class HumStudentManagementRegister extends HTMLElement {
 
         $(this).on("click",this.selectors.cancelButton,{ classObject: this },this.handlerCancelStudent);
         $(this).on("click",this.selectors.studentRegisterBackBtn,{ classObject: this },this.handlerBackStudent);
+      $(this).on(
+    "input change",
+    this.selectors.studentRegisterForm + " :input:not([type='hidden'])",
+    { classObject: this },
+    this.handlerStudentFormInput
+);
     }
 
 
@@ -313,6 +319,21 @@ initializePopOver() {
 
     });
 }
+handlerStudentFormInput(event) {
+
+    const classObject = event.data.classObject;
+
+    const form = $(classObject).find(
+        classObject.selectors.studentRegisterForm
+    );
+
+    const hasValue = form.find(":input:not([type='hidden'])")
+        .not(classObject.selectors.studentActiveStatus)
+        .toArray()
+        .some(element => String($(element).val() || "").trim() !== "");
+
+    form.find(classObject.selectors.saveStudentButton).prop("disabled", !hasValue);
+}
  handlerBackStudent(event){
     event.preventDefault();
 
@@ -417,7 +438,7 @@ handlerCancelStudent(event) {
      initializeStudentForm(){
         const classObject=this;
         const studentId = $(this).attr("student-id");
-
+     $(this).find(this.selectors.saveStudentButton).prop("disabled", true);
         if(studentId){
             $(classObject).find(classObject.selectors.studentRegisterTitle).text("Edit Student");
 
@@ -465,9 +486,11 @@ handlerCancelStudent(event) {
                 $(classObject).find(classObject.selectors.studentState).val(student.state || "");
                 $(classObject).find(classObject.selectors.studentCountry).val(student.country || "");
                 $(classObject).find(classObject.selectors.studentPostalCode).val(student.postalCode || "");
+                $(classObject).find(classObject.selectors.saveStudentButton).prop("disabled", false);
                 } else{
                     toastr.error(response.data);  
                 }
+                
             },
              error :function(xhr){
                 console.error("Get Student Error:", xhr.responseText);
@@ -518,7 +541,7 @@ editStudent() {
         success: function(response) {
             if (response.status === "Success") {
                 toastr.success(response.data);
-
+      
                 $(classObject.selectors.smsMainContainer).html(
                     "<hum-student-management-filtertable></hum-student-management-filtertable>"
                 );

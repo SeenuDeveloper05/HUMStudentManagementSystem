@@ -1,185 +1,190 @@
-class HumDailyAttendance extends HTMLElement{
-    constructor(){
+class HumDailyAttendance extends HTMLElement {
+    constructor() {
         super();
 
-        const template=document.getElementById("hum_daily_attendance");
+        const template = document.getElementById("hum_daily_attendance");
 
         this.appendChild(template.content.cloneNode(true));
-      
-       this.selectors = {
 
-    attendancePage: ".hum-attendance-page",
+        this.selectors = {
 
-    // Navigation
-    attendanceTabs: "#hum_attendance_tabs",
-    attendanceTabButton: "#hum_attendance_tabs .nav-link",
-    dailyAttendanceTab: "#hum_attendance_daily_tab",
-    attendanceHistoryTab: "#hum_attendance_history_tab",
-    attendanceAnalysisTab: "#hum_attendance_analysis_tab",
+            attendancePage: ".hum-attendance-page",
 
-    // Tab panes
-    dailyAttendancePane: "#hum_attendance_daily_pane",
-    attendanceHistoryPane: "#hum_attendance_history_pane",
-    attendanceAnalysisPane: "#hum_attendance_analysis_pane",
+            // Navigation
+            attendanceTabs: "#hum_attendance_tabs",
+            attendanceTabButton: "#hum_attendance_tabs .nav-link",
+            dailyAttendanceTab: "#hum_attendance_daily_tab",
+            attendanceHistoryTab: "#hum_attendance_history_tab",
+            attendanceAnalysisTab: "#hum_attendance_analysis_tab",
 
-    // Header
-    saveAttendanceButton: "#hum_attendance_save_btn",
+            // Tab panes
+            dailyAttendancePane: "#hum_attendance_daily_pane",
+            attendanceHistoryPane: "#hum_attendance_history_pane",
+            attendanceAnalysisPane: "#hum_attendance_analysis_pane",
 
-    // Filters
-    attendanceDate: "#hum_attendance_date",
-    attendanceBranch: "#hum_attendance_branch",
-    studentColumn: "#hum_attendance_search_column",
-    studentSearch: "#hum_attendance_student_search",
+            // Header
+            saveAttendanceButton: "#hum_attendance_save_btn",
 
-    // Error message
-    attendanceError: "#hum_attendance_error",
+            // Filters
+            attendanceDate: "#hum_attendance_date",
+            attendanceBranch: "#hum_attendance_branch",
+            studentColumn: "#hum_attendance_search_column",
+            studentSearch: "#hum_attendance_student_search",
+            lengthFilter: "#hum_daily_page_length",
 
-    // Attendance table
-    attendanceTableWrapper:"#hum_attendance_table_wrapper",
-    attendanceTable: "#hum_attendance_table",
-    attendanceTableBody: "#hum_attendance_table_body",
+            // Error message
+            attendanceError: "#hum_attendance_error",
 
-    // Attendance row controls
-    attendanceStatusButton: ".hum-attendance-status-btn",
-    attendancePresentButton: ".hum-attendance-present-btn",
-    attendanceAbsentButton: ".hum-attendance-absent-btn",
-    attendanceLeaveCheckbox: ".hum-attendance-leave-checkbox",
+            // Attendance table
+            attendanceTableWrapper: "#hum_attendance_table_wrapper",
+            attendanceTable: "#hum_attendance_table",
+            attendanceTableBody: "#hum_attendance_table_body",
 
-    // Attendance summary
-    attendanceSummary: "#hum_attendance_summary",
-    presentCount: "#hum_attendance_present_count",
-    absentCount: "#hum_attendance_absent_count",
-    studentCount: "#hum_attendance_student_count",
+            // Attendance row controls
+            attendanceStatusButton: ".hum-attendance-status-btn",
+            attendancePresentButton: ".hum-attendance-present-btn",
+            attendanceAbsentButton: ".hum-attendance-absent-btn",
+            attendanceLeaveCheckbox: ".hum-attendance-leave-checkbox",
 
-    // template container
-    attendanceHistoryContainer:"#hum_attendance_history",
-    attendanceAnalysisContainer:"#hum_attendance_analysis"
+            // Attendance summary
+            attendanceSummary: "#hum_attendance_summary",
+            presentCount: "#hum_attendance_present_count",
+            absentCount: "#hum_attendance_absent_count",
+            studentCount: "#hum_attendance_student_count",
 
+            // template container
+            attendanceHistoryContainer: "#hum_attendance_history",
+            attendanceAnalysisContainer: "#hum_attendance_analysis"
 
-};
-    this.attendanceDataTable =null;
+        };
 
-    // Fixed teacher id
-    this.teacherId = 1;
+        this.attendanceDataTable = null;
 
-    // Selected attendance of every loaded student (key = studentId),
-    // so the selections are not lost when the table redraws (search / filter).
-    this.attendanceSelections = {};
+        // Fixed teacher id
+        this.teacherId = 1;
 
-  this.attendanceDataTableConfig ={
-       processing: true,
-       serverSide: true,
-       pageLength:20,
+        // Selected attendance of every loaded student (key = studentId),
+        // so the selections are not lost when the table redraws (search / filter).
+        this.attendanceSelections = {};
 
-     dom:
-       't' +
-        '<"row align-items-center mt-2 mb-1 px-2"' +
-        '<"col-md-6 d-flex align-items-center"i>' +
-        '<"col-md-6 d-flex justify-content-md-end hum-custom-pagination"p>' +
-        '>',
-             
-ajax: (requestData, callback) => {
-    const classObject = this;
+        this.attendanceDataTableConfig = {
+            processing: true,
+            serverSide: true,
+            pageLength: 20,
 
-    $.ajax({
-        url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/student/list",
-        type: "POST",
-        dataType: "json",
-        contentType: "application/json",
-        data: JSON.stringify(classObject.attendanceStudentFormatRequestData(requestData))
-    })
-    .then(async (jsonResponse) => {
-        const rows = await classObject.displayAttendanceStudentDataList(jsonResponse);
-                    
+            dom:
+                't' +
+                '<"row align-items-center mt-2 mb-1 px-2"' +
+                '<"col-md-6 d-flex align-items-center"i>' +
+                '<"col-md-6 d-flex justify-content-md-end hum-custom-pagination"p>' +
+                '>',
 
-        callback({
-            draw: jsonResponse.draw ?? requestData.draw,
-            recordsTotal: jsonResponse.recordsTotal,
-            recordsFiltered: jsonResponse.recordsFiltered,
-            data: rows
-        });
-    })
-    .catch(() => {
-        callback({ draw: requestData.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
-    });
-},
+            ajax: (requestData, callback) => {
+                const classObject = this;
 
-       columns:[
-         {
-            data: "sno",
-            searchable: false,
-            orderable: false,
-            visible: true
-         },
-         {
-            data: "name",
-            searchable: false,
-            orderable: false,
-            visible: true
-         },
-         {
-            data: "branchOfStudy",
-            searchable: false,
-            orderable: false,
-            visible: true
+                $.ajax({
+                    url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/student/list",
+                    type: "POST",
+                    dataType: "json",
+                    contentType: "application/json",
+                    data: JSON.stringify(classObject.attendanceStudentFormatRequestData(requestData))
+                })
+                    .then(async (jsonResponse) => {
+                        const rows = await classObject.displayAttendanceStudentDataList(jsonResponse);
 
-         },
-         {
-            data: "attendance",
-            searchable: false,
-            orderable: false,
-            visible: true
-         },
-         {
-            data: "sickleave",
-            searchable: false,
-            orderable: false,
-            visible: true
-         },
-         {
-            data: "ecaleave",
-            searchable: false,
-            orderable: false,
-            visible: true
-         }
+                        callback({
+                            draw: jsonResponse.draw ?? requestData.draw,
+                            recordsTotal: jsonResponse.recordsTotal,
+                            recordsFiltered: jsonResponse.recordsFiltered,
+                            data: rows
+                        });
+                    })
+                    .catch(() => {
+                        callback({
+                            draw: requestData.draw,
+                            recordsTotal: 0,
+                            recordsFiltered: 0,
+                            data: []
+                        });
+                    });
+            },
 
-       ]
+            columns: [
+                {
+                    data: "sno",
+                    searchable: false,
+                    orderable: false,
+                    visible: true
+                },
+                {
+                    data: "name",
+                    searchable: false,
+                    orderable: false,
+                    visible: true
+                },
+                {
+                    data: "branchOfStudy",
+                    searchable: false,
+                    orderable: false,
+                    visible: true
+                },
+                {
+                    data: "attendance",
+                    searchable: false,
+                    orderable: false,
+                    visible: true
+                },
+                {
+                    data: "sickleave",
+                    searchable: false,
+                    orderable: false,
+                    visible: true
+                },
+                {
+                    data: "ecaleave",
+                    searchable: false,
+                    orderable: false,
+                    visible: true
+                }
+
+            ]
+        };
     }
-}
 
-   connectedCallback(){
-        try{
-          this.bindAllRequiredEvents();
-          this.initializeToastr();
-          this.initializeDatePicker();
-          this.getAttendanceList();
-          this.initializetemplate();
+    connectedCallback() {
+        try {
+            this.bindAllRequiredEvents();
+            this.initializeToastr();
+            this.initializeDatePicker();
+            this.getAttendanceList();
+            this.initializetemplate();
 
         }
-        catch(error){
-           console.log(error);
+        catch (error) {
+            console.log(error);
         }
-      
-      }  
+    }
 
-      bindAllRequiredEvents(){
+    bindAllRequiredEvents() {
         $(this)
-        .on("input",this.selectors.studentSearch,{classObject:this},this.handlerAttendanceStudentSearch)
-        .on("change",this.selectors.studentColumn,{classObject:this},this.handlerAttendanceStudentSearch)
-        .on("change",this.selectors.attendanceBranch,{classObject:this},this.handlerAttendanceStudentFilter)
-        .on("click",this.selectors.attendanceStatusButton,{classObject:this},this.handlerAttendanceStatusClick)
-        .on("change",this.selectors.attendanceLeaveCheckbox,{classObject:this},this.handlerAttendanceLeaveChange)
-        .on("click",this.selectors.saveAttendanceButton,{classObject:this},this.handlerAttendanceSave)
-        .on("click",this.selectors.attendanceTabButton,{classObject:this},this.handlerAttendanceTabClick);
-      }
-       initializetemplate(){
-          const classObject=this;
+            .on("input", this.selectors.studentSearch, { classObject: this }, this.handlerAttendanceStudentSearch)
+            .on("change", this.selectors.studentColumn, { classObject: this }, this.handlerAttendanceStudentSearch)
+            .on("change", this.selectors.lengthFilter, { classObject: this }, this.handlerAttendanceLengthChange)
+            .on("change", this.selectors.attendanceBranch, { classObject: this }, this.handlerAttendanceStudentFilter)
+            .on("click", this.selectors.attendanceStatusButton, { classObject: this }, this.handlerAttendanceStatusClick)
+            .on("change", this.selectors.attendanceLeaveCheckbox, { classObject: this }, this.handlerAttendanceLeaveChange)
+            .on("click", this.selectors.saveAttendanceButton, { classObject: this }, this.handlerAttendanceSave)
+            .on("click", this.selectors.attendanceTabButton, { classObject: this }, this.handlerAttendanceTabClick);
+    }
 
-          $(classObject.selectors.attendanceHistoryContainer).html("<hum-attendance-history-temp></hum-attendance-history-temp>")
-           $(classObject.selectors.attendanceAnalysisContainer).html("<hum-attendance-analysis-temp></hum-attendance-analysis-temp>")
-       }
+    initializetemplate() {
+        const classObject = this;
 
-      initializeToastr() {
+        $(classObject.selectors.attendanceHistoryContainer).html("<hum-attendance-history-temp></hum-attendance-history-temp>");
+        $(classObject.selectors.attendanceAnalysisContainer).html("<hum-attendance-analysis-temp></hum-attendance-analysis-temp>");
+    }
+
+    initializeToastr() {
         toastr.options = {
             closeButton: true,
             progressBar: true,
@@ -187,13 +192,14 @@ ajax: (requestData, callback) => {
             timeOut: 3000,
             preventDuplicates: true
         };
-      }
+    }
 
-      // Date picker: today by default, future dates are disabled
-      initializeDatePicker() {
+    // Date picker: today by default, future dates are disabled
+    initializeDatePicker() {
         const classObject = this;
+
         const datepickerConfig = {
-            dateFormat: "d-m-Y",
+            dateFormat: "m-d-Y",
             defaultDate: "today",
             maxDate: "today",
             position: "below"
@@ -201,320 +207,342 @@ ajax: (requestData, callback) => {
 
         $(classObject.selectors.attendanceDate)
             .flatpickr(datepickerConfig);
-      }
-       
-checkAttendance(event) {
+    }
 
-    const classObject = this;
+    checkAttendance(event) {
 
-    return new Promise((resolve, reject) => {
+        const classObject = this;
 
-        $.ajax({
-            url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/attendance/list/byday",
-            method: "POST",
-            dataType: "json",
-            contentType: "application/json",
+        return new Promise((resolve, reject) => {
 
-            data: JSON.stringify({
-                draw: 1,
-                length: 50,
-                start: 0,
+            $.ajax({
+                url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/attendance/list/byday",
+                method: "POST",
+                dataType: "json",
+                contentType: "application/json",
 
-                attendanceFilter: {
-                    date: $(classObject.selectors.attendanceDate).val() || null,
-                    statusFlag: "",
-                    studentBranchOfStudy: $(classObject.selectors.attendanceBranch).val() || "",
-                    sickLeaveStatusFlag: "",
-                    activitieStatusFlag: ""
-                },
+                data: JSON.stringify({
+                    draw: 1,
+                    length: 10,
+                    start: 0,
 
-                order: {
-                    column: "sno",
-                    type: ""
-                },
+                    attendanceFilter: {
+                        date: this.ChangeDateFormat($(classObject.selectors.attendanceDate).val()) || null,
+                        statusFlag: "",
+                        studentBranchOfStudy: $(classObject.selectors.attendanceBranch).val() || "",
+                        sickLeaveStatusFlag: "",
+                        activitieStatusFlag: ""
+                    },
 
-                search: "",
-                searchColumn: "",
-                filterBy: "",
-                filterValue: ""
-            }),
+                    order: {
+                        column: "sno",
+                        type: ""
+                    },
 
-            success: function(res) {
+                    search: "",
+                    searchColumn: "",
+                    filterBy: "",
+                    filterValue: ""
+                }),
 
-                if (res.status === "Success") {
+                success: function (res) {
 
-                    if (res.data.length === 0) {
-                        resolve(true);
+                    if (res.status === "Success") {
+
+                        if (res.data.length === 0) {
+                            resolve(true);
+                        } else {
+                            resolve(false);
+                        }
+
                     } else {
-                        resolve(false);
+                        reject(res);
                     }
+                },
 
-                } else {
-                    reject(res);
+                error: (error) => {
+                    console.log(error);
+                    reject(error);
                 }
-            },
-
-            error: (error) => {
-                console.log(error);
-                reject(error);
-            }
+            });
         });
-    });
-}
+    }
 
-      // Save Attendance is shown only in the Daily Attendance tab
-      handlerAttendanceTabClick(event){
-         const classObject = event.data.classObject;
-         const tabId = $(event.currentTarget).attr("id");
+    // Save Attendance is shown only in the Daily Attendance tab
+    handlerAttendanceTabClick(event) {
+        const classObject = event.data.classObject;
+        const tabId = $(event.currentTarget).attr("id");
 
-         $(classObject.selectors.saveAttendanceButton).toggle(tabId === "hum_attendance_daily_tab");
+        $(classObject.selectors.saveAttendanceButton).toggle(tabId === "hum_attendance_daily_tab");
 
-         // Reload the history list every time the History tab is opened
-         if(tabId === "hum_attendance_history_tab"){
+        // Reload the history list every time the History tab is opened
+        if (tabId === "hum_attendance_history_tab") {
             const historyElement = $(classObject.selectors.attendanceHistoryContainer)
-               .children("hum-attendance-history-temp").get(0);
+                .children("hum-attendance-history-temp").get(0);
 
-            if(historyElement){
-               historyElement.reloadAttendanceHistoryList();
+            if (historyElement) {
+                historyElement.reloadAttendanceHistoryList();
             }
-         }
-      }
+        }
+    }
 
-      handlerAttendanceStudentSearch(event){
-         const classObject= event.data.classObject;
-         classObject.attendanceDataTable.page.len(20).draw(true);
-      }
-      handlerAttendanceStudentFilter(event){
-         const classObject= event.data.classObject;
-         const selectAttendance=$(classObject).find(classObject.selectors.attendanceBranch).val()||"";
+    handlerAttendanceStudentSearch(event) {
+        const classObject = event.data.classObject;
+        const length = Number($(classObject.selectors.lengthFilter).val()) || 20;
 
-     if(selectAttendance===""){
-        $(classObject).find(classObject.selectors.attendanceTableWrapper).addClass("d-none");
-        
-      }
-      else{
-         $(classObject).find(classObject.selectors.attendanceTableWrapper).removeClass("d-none");
-         classObject.attendanceDataTable.page.len(20).draw(true);
-           
-      }
+        classObject.attendanceDataTable.page.len(length).draw(true);
+    }
 
-  
+    // Page length dropdown change
+    handlerAttendanceLengthChange(event) {
+        const classObject = event.data.classObject;
+        const length = Number($(event.currentTarget).val()) || 20;
 
-        
-      }
+        classObject.attendanceDataTable.page.len(length).draw(true);
+    }
 
-      // Present / Absent button
-      handlerAttendanceStatusClick(event){
-         const classObject = event.data.classObject;
+    handlerAttendanceStudentFilter(event) {
+        const classObject = event.data.classObject;
+        const selectAttendance = $(classObject).find(classObject.selectors.attendanceBranch).val() || "";
+        const length = Number($(classObject.selectors.lengthFilter).val()) || 20;
 
-         const studentId = $(event.currentTarget).data("student-id");
-         const status = $(event.currentTarget).data("status");
-         const record = classObject.attendanceSelections[studentId];
+        if (selectAttendance === "") {
+            $(classObject).find(classObject.selectors.attendanceTableWrapper).addClass("d-none");
+            $(classObject).find(classObject.selectors.saveAttendanceButton).addClass("d-none")
+        }
+        else {
+            $(classObject).find(classObject.selectors.attendanceTableWrapper).removeClass("d-none");
+             $(classObject).find(classObject.selectors.saveAttendanceButton).removeClass("d-none")
+            classObject.attendanceDataTable.page.len(length).draw(true);
+        }
+    }
 
-         if(!record){
+    // Present / Absent button
+    handlerAttendanceStatusClick(event) {
+        const classObject = event.data.classObject;
+
+        const studentId = $(event.currentTarget).data("student-id");
+        const status = $(event.currentTarget).data("status");
+        const record = classObject.attendanceSelections[studentId];
+
+        if (!record) {
             return;
-         }
+        }
 
-         record.attendanceStatusFlag = status;
+        record.attendanceStatusFlag = status;
 
-         // Present: leave checkboxes are disabled and reset to N
-         if(status === "P"){
+        // Present: leave checkboxes are disabled and reset to N
+        if (status === "P") {
             record.approvedSickLeaveFlag = "N";
             record.extraCurricularActivitiesFlag = "N";
-         }
+        }
 
-         classObject.updateAttendanceRow($(event.currentTarget).closest("tr"), record);
-      }
+        classObject.updateAttendanceRow($(event.currentTarget).closest("tr"), record);
+    }
 
-      // Sick Leave / ECA Leave checkbox (only one can be selected at a time)
-      handlerAttendanceLeaveChange(event){
-         const classObject = event.data.classObject;
+    // Sick Leave / ECA Leave checkbox (only one can be selected at a time)
+    handlerAttendanceLeaveChange(event) {
+        const classObject = event.data.classObject;
 
-         const studentId = $(event.currentTarget).data("student-id");
-         const leaveType = $(event.currentTarget).data("leave-type");
-         const record = classObject.attendanceSelections[studentId];
+        const studentId = $(event.currentTarget).data("student-id");
+        const leaveType = $(event.currentTarget).data("leave-type");
+        const record = classObject.attendanceSelections[studentId];
 
-         if(!record){
+        if (!record) {
             return;
-         }
+        }
 
-         const isChecked = $(event.currentTarget).is(":checked");
+        const isChecked = $(event.currentTarget).is(":checked");
 
-         // Reset both, then set only the clicked one
-         record.approvedSickLeaveFlag = "N";
-         record.extraCurricularActivitiesFlag = "N";
+        // Reset both, then set only the clicked one
+        record.approvedSickLeaveFlag = "N";
+        record.extraCurricularActivitiesFlag = "N";
 
-         if(isChecked){
-            if(leaveType === "sick"){
-               record.approvedSickLeaveFlag = "Y";
+        if (isChecked) {
+            if (leaveType === "sick") {
+                record.approvedSickLeaveFlag = "Y";
             }
-            else{
-               record.extraCurricularActivitiesFlag = "Y";
+            else {
+                record.extraCurricularActivitiesFlag = "Y";
             }
-         }
+        }
 
-         classObject.updateAttendanceRow($(event.currentTarget).closest("tr"), record);
-      }
+        classObject.updateAttendanceRow($(event.currentTarget).closest("tr"), record);
+    }
+      ChangeDateFormat(dateString) {
+        if (!dateString) {
+            return "";
+        }
 
-      // Save Attendance button
-      handlerAttendanceSave(event){
-         event.preventDefault();
-         const classObject = event.data.classObject;
+        const dateParts = dateString.split("-");
 
-         const branch = $(classObject.selectors.attendanceBranch).val() || "";
-         const attendanceDate = $(classObject.selectors.attendanceDate).val() || "";
+        return dateParts[1] + "-" + dateParts[0] + "-" + dateParts[2];
+    }
 
-         // API accepts only one branch per request
-         if(!branch){
+    // Save Attendance button
+    handlerAttendanceSave(event) {
+        event.preventDefault();
+        const classObject = event.data.classObject;
+
+        const branch = $(classObject.selectors.attendanceBranch).val() || "";
+        const attendanceDate = $(classObject.selectors.attendanceDate).val() || "";
+
+        // API accepts only one branch per request
+        if (!branch) {
             toastr.warning("Please select a department");
             return;
-         }
+        }
 
-         if(!attendanceDate){
+        if (!attendanceDate) {
             toastr.warning("Please select an attendance date");
             return;
-         }
+        }
 
-         const attendanceRequest = classObject.attendanceFormatSaveRequestData(branch, attendanceDate);
+        const attendanceRequest = classObject.attendanceFormatSaveRequestData(branch, attendanceDate);
 
-         if(attendanceRequest.length === 0){
+        if (attendanceRequest.length === 0) {
             toastr.error("No students to save");
             return;
-         }
+        }
 
-         classObject.saveAttendance(attendanceRequest);
-      }
+        classObject.saveAttendance(attendanceRequest);
+    }
 
-      attendanceFormatSaveRequestData(branch, attendanceDate){
-         const classObject = this;
-         const attendanceDataRequest = [];
+    attendanceFormatSaveRequestData(branch, attendanceDate) {
+        const classObject = this;
+        const attendanceDataRequest = [];
 
-         for(const studentId in classObject.attendanceSelections){
+        for (const studentId in classObject.attendanceSelections) {
             const record = classObject.attendanceSelections[studentId];
 
             // Only the selected branch students go in this request
-            if(record.branchOfStudy !== branch){
-               continue;
+            if (record.branchOfStudy !== branch) {
+                continue;
             }
 
             const isPresent = record.attendanceStatusFlag === "P";
 
             attendanceDataRequest.push({
-               attendanceId: record.attendanceId || null,
-               studentId: record.studentId,
-               branchOfStudy: branch,
-               attendanceDate: attendanceDate,
-               attendanceStatusFlag: record.attendanceStatusFlag,
-               approvedSickLeaveFlag: isPresent ? "N" : record.approvedSickLeaveFlag,
-               extraCurricularActivitiesFlag: isPresent ? "N" : record.extraCurricularActivitiesFlag,
-               teacherId: classObject.teacherId
+                attendanceId: record.attendanceId || null,
+                studentId: record.studentId,
+                branchOfStudy: branch,
+                attendanceDate: attendanceDate,
+                attendanceStatusFlag: record.attendanceStatusFlag,
+                approvedSickLeaveFlag: isPresent ? "N" : record.approvedSickLeaveFlag,
+                extraCurricularActivitiesFlag: isPresent ? "N" : record.extraCurricularActivitiesFlag,
+                teacherId: classObject.teacherId
             });
-         }
+        }
 
-         return attendanceDataRequest;
-      }
+        return attendanceDataRequest;
+    }
 
-      saveAttendance(attendanceRequest){
-         const classObject = this;
+    saveAttendance(attendanceRequest) {
+        const classObject = this;
 
-         $.ajax({
-            url:"https://dev-api.humhealth.com/StudentManagementSystemAPI/attendance/take",
-            type:"POST",
-            dataType:"json",
-            contentType:"application/json",
+        $.ajax({
+            url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/attendance/take",
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
             data: JSON.stringify(attendanceRequest),
 
-            success:function(response){
-               // TEMPORARY messages: to be replaced with the message from the API response
-               const successCount = Number(response.successCount) || 0;
-               const failureCount = Number(response.failureCount) || 0;
+            success: function (response) {
+                // TEMPORARY messages: to be replaced with the message from the API response
+                const successCount = Number(response.successCount) || 0;
+                const failureCount = Number(response.failureCount) || 0;
 
-               if(failureCount > 0){
-                  toastr.error(failureCount + " attendance records failed to save");
-               }
-               else if(successCount > 0){
-                  toastr.success(successCount +"Attendance records saveed successfully");
-                   classObject.attendanceDataTable.ajax.reload(null, false);
-               }
-               else{
-                  toastr.warning(response.data);
-               }
+                if (failureCount > 0) {
+                    toastr.error(failureCount + " attendance records failed to save");
+                }
+                else if (successCount > 0) {
+                    toastr.success(successCount + "Attendance records saveed successfully");
+                    classObject.attendanceDataTable.ajax.reload(null, false);
+                }
+                else {
+                    toastr.warning(response.data);
+                }
             },
 
-            error:function(error){
-               console.error(error);
-               toastr.error("Unable to save attendance. Please try again.");
+            error: function (error) {
+                console.error(error);
+                toastr.error("Unable to save attendance. Please try again.");
             }
-         });
-         
-      }
+        });
 
-      // Refresh one row (button highlight, checkbox enable/disable and checked state)
-      updateAttendanceRow(row, record){
-         const classObject = this;
-         const isPresent = record.attendanceStatusFlag === "P";
+    }
 
-         $(row).find(classObject.selectors.attendancePresentButton).toggleClass("is-present", isPresent);
-         $(row).find(classObject.selectors.attendanceAbsentButton).toggleClass("is-absent", !isPresent);
+    // Refresh one row (button highlight, checkbox enable/disable and checked state)
+    updateAttendanceRow(row, record) {
+        const classObject = this;
+        const isPresent = record.attendanceStatusFlag === "P";
 
-         $(row).find(classObject.selectors.attendanceLeaveCheckbox + '[data-leave-type="sick"]')
+        $(row).find(classObject.selectors.attendancePresentButton).toggleClass("is-present", isPresent);
+        $(row).find(classObject.selectors.attendanceAbsentButton).toggleClass("is-absent", !isPresent);
+
+        $(row).find(classObject.selectors.attendanceLeaveCheckbox + '[data-leave-type="sick"]')
             .prop("checked", record.approvedSickLeaveFlag === "Y")
             .prop("disabled", isPresent);
 
-         $(row).find(classObject.selectors.attendanceLeaveCheckbox + '[data-leave-type="eca"]')
+        $(row).find(classObject.selectors.attendanceLeaveCheckbox + '[data-leave-type="eca"]')
             .prop("checked", record.extraCurricularActivitiesFlag === "Y")
             .prop("disabled", isPresent);
-      }
+    }
 
-attendanceStudentFormatRequestData(requestData){
-      const classObject = this;
+    attendanceStudentFormatRequestData(requestData) {
+        const classObject = this;
 
-      this.studentFilterRequest={
-         draw: requestData.draw,
-         length:requestData.length,
-         start:requestData.start,
+        this.studentFilterRequest = {
+            draw: requestData.draw,
 
-         filter:{
-            gender: "",
-            residingStatusFlag: "",
-            activeFlag: "A",
-            branchOfStudy:$(classObject.selectors.attendanceBranch).val() || ""
-         },
+            // Send the selected dropdown value to the API
+            length: Number(requestData.length) || Number($(classObject.selectors.lengthFilter).val()) || 20,
 
-      order:{
-          column:"name",
-          type:"asc"
-        },
-         search:$(classObject.selectors.studentSearch).val()||"",
-        searchColumn:$(classObject.selectors.studentColumn).val()||""
-      };
-      return this.studentFilterRequest;
-   }
+            start: requestData.start,
 
-  displayAttendanceStudentDataList(response){
-     if(response.status ==="Success"){
-        return this.checkAttendance().then((res)=>{
-            if(res){
-             return this.verifiedAttendancelist(response);
-             
-            } else {
-                return []
-            }
-        }).catch(()=>{
-            return [];
-        })   
+            filter: {
+                gender: "",
+                residingStatusFlag: "",
+                activeFlag: "A",
+                branchOfStudy: $(classObject.selectors.attendanceBranch).val() || ""
+            },
 
-         }
-          
-     
-  }
-       verifiedAttendancelist(response){
-const studentDataArray = []
-        let index=1;
-        for(const res of response.data){
-            const data={};
+            order: {
+                column: "name",
+                type: "asc"
+            },
 
-             let branchOfStudy = res.branchOfStudy;
+            search: $(classObject.selectors.studentSearch).val() || "",
+            searchColumn: $(classObject.selectors.studentColumn).val() || ""
+        };
+
+        return this.studentFilterRequest;
+    }
+
+    displayAttendanceStudentDataList(response) {
+        if (response.status === "Success") {
+            return this.checkAttendance().then((res) => {
+                if (res) {
+                    return this.verifiedAttendancelist(response);
+
+                } else {
+                    return [];
+                }
+            }).catch(() => {
+                return [];
+            });
+
+        }
+    }
+
+    verifiedAttendancelist(response) {
+        const studentDataArray = [];
+        let index = 1;
+
+        for (const res of response.data) {
+            const data = {};
+
+            let branchOfStudy = res.branchOfStudy;
 
             switch (branchOfStudy) {
                 case "CSCI":
@@ -542,83 +570,87 @@ const studentDataArray = []
                     break;
             }
 
-             // Create the selection only the first time a student is loaded (default Present)
-             if(!this.attendanceSelections[res.studentId]){
+            // Create the selection only the first time a student is loaded (default Present)
+            if (!this.attendanceSelections[res.studentId]) {
                 this.attendanceSelections[res.studentId] = {
-                   attendanceId: res.attendanceId || null,
-                   studentId: res.studentId,
-                   branchOfStudy: res.branchOfStudy,
-                   attendanceStatusFlag: "P",
-                   approvedSickLeaveFlag: "N",
-                   extraCurricularActivitiesFlag: "N"
+                    attendanceId: res.attendanceId || null,
+                    studentId: res.studentId,
+                    branchOfStudy: res.branchOfStudy,
+                    attendanceStatusFlag: "P",
+                    approvedSickLeaveFlag: "N",
+                    extraCurricularActivitiesFlag: "N"
                 };
-             }
-             const record = this.attendanceSelections[res.studentId];
+            }
 
-             data["sno"]=index++;
-             data["name"]=[
-                res.firstName,res.middleName, res.lastName
-             ].filter(Boolean).join(" ");
-             data["branchOfStudy"]= branchOfStudy;
-             data["attendance"] = this.forAttendanceStatus(record);
-             data["sickleave"] = this.forLeaveCheckbox(record, "sick");
-             data["ecaleave"] = this.forLeaveCheckbox(record, "eca");
-             studentDataArray.push(data);
+            const record = this.attendanceSelections[res.studentId];
+
+            data["sno"] = index++;
+            data["name"] = [
+                res.firstName, res.middleName, res.lastName
+            ].filter(Boolean).join(" ");
+            data["branchOfStudy"] = branchOfStudy;
+            data["attendance"] = this.forAttendanceStatus(record);
+            data["sickleave"] = this.forLeaveCheckbox(record, "sick");
+            data["ecaleave"] = this.forLeaveCheckbox(record, "eca");
+
+            studentDataArray.push(data);
         }
+
         return studentDataArray;
-     }
+    }
 
-  forAttendanceStatus(record){
-     const presentClass = record.attendanceStatusFlag === "P" ? "is-present" : "";
-     const absentClass = record.attendanceStatusFlag === "A" ? "is-absent" : "";
+    forAttendanceStatus(record) {
+        const presentClass = record.attendanceStatusFlag === "P" ? "is-present" : "";
+        const absentClass = record.attendanceStatusFlag === "A" ? "is-absent" : "";
 
-     return `
-        <div class="btn-group btn-group-sm hum-attendance-status-group" role="group">
-            <button type="button"
-                class="btn hum-attendance-status-btn hum-attendance-present-btn ${presentClass}"
-                data-student-id="${record.studentId}"
-                data-status="P">
-                Present
-            </button>
+        return `
+            <div class="btn-group btn-group-sm hum-attendance-status-group" role="group">
+                <button type="button"
+                    class="btn hum-attendance-status-btn hum-attendance-present-btn ${presentClass}"
+                    data-student-id="${record.studentId}"
+                    data-status="P">
+                    Present
+                </button>
 
-            <button type="button"
-                class="btn hum-attendance-status-btn hum-attendance-absent-btn ${absentClass}"
-                data-student-id="${record.studentId}"
-                data-status="A">
-                Absent
-            </button>
-        </div>
-     `;
-  }
+                <button type="button"
+                    class="btn hum-attendance-status-btn hum-attendance-absent-btn ${absentClass}"
+                    data-student-id="${record.studentId}"
+                    data-status="A">
+                    Absent
+                </button>
+            </div>
+        `;
+    }
 
-  // Checkbox is disabled while the student is Present
-  forLeaveCheckbox(record, leaveType){
-     const isPresent = record.attendanceStatusFlag === "P";
+    // Checkbox is disabled while the student is Present
+    forLeaveCheckbox(record, leaveType) {
+        const isPresent = record.attendanceStatusFlag === "P";
 
-     const flag = leaveType === "sick"
-        ? record.approvedSickLeaveFlag
-        : record.extraCurricularActivitiesFlag;
+        const flag = leaveType === "sick"
+            ? record.approvedSickLeaveFlag
+            : record.extraCurricularActivitiesFlag;
 
-     return `
-        <label class="hum-attendance-yes">
-            <input type="checkbox"
-                class="hum-attendance-leave-checkbox"
-                data-student-id="${record.studentId}"
-                data-leave-type="${leaveType}"
-                ${flag === "Y" ? "checked" : ""}
-                ${isPresent ? "disabled" : ""}>
-            <span>Yes</span>
-        </label>
-     `;
-  }
+        return `
+            <label class="hum-attendance-yes">
+                <input type="checkbox"
+                    class="hum-attendance-leave-checkbox"
+                    data-student-id="${record.studentId}"
+                    data-leave-type="${leaveType}"
+                    ${flag === "Y" ? "checked" : ""}
+                    ${isPresent ? "disabled" : ""}>
+                <span>Yes</span>
+            </label>
+        `;
+    }
 
-    getAttendanceList(){
-        if(!this.attendanceDataTable){
-            this.attendanceDataTable=$(this).find(this.selectors.attendanceTable).DataTable(this.attendanceDataTableConfig);
+    getAttendanceList() {
+        if (!this.attendanceDataTable) {
+            this.attendanceDataTable = $(this).find(this.selectors.attendanceTable).DataTable(this.attendanceDataTableConfig);
             $(this).find(this.selectors.attendanceStatusButton).prop("disabled", true);
         }
     }
 }
+
 class HumAttendanceHistory extends HTMLElement{
     constructor(){
         super();
@@ -630,6 +662,7 @@ class HumAttendanceHistory extends HTMLElement{
         this.selectors = {
             historyMonth: "#hum_attendance_history_month",
             historyYear: "#hum_attendance_history_year",
+            historyLength:"#hum_history_page_length",
             historyDepartment: "#hum_attendance_history_department",
             historyStatus: "#hum_attendance_history_status",
             historySickLeave: "#hum_attendance_history_sick_leave",
@@ -645,15 +678,16 @@ class HumAttendanceHistory extends HTMLElement{
         this.attendanceHistoryDataTableConfig = {
             processing: true,
             serverSide: true,
-            pageLength: 20,
+            pageLength: 10,
 
             searching: false,
-             dom:
-               't' +
-               '<"row align-items-center mt-2 mb-1 px-2"' +
-               '<"col-md-6 d-flex align-items-center"i>' +
-               '<"col-md-6 d-flex justify-content-md-end hum-custom-pagination"p>' +
-               '>',
+            dom:
+                't' +
+                '<"row align-items-center mt-2 mb-1 px-2"' +
+                '<"col-md-6 d-flex align-items-center"i>' +
+                '<"col-md-6 d-flex justify-content-md-end hum-custom-pagination"p>' +
+                '>',
+
             ajax:{
                 url:"https://dev-api.humhealth.com/StudentManagementSystemAPI/attendance/list/byday",
                 type:"POST",
@@ -740,7 +774,16 @@ class HumAttendanceHistory extends HTMLElement{
             {classObject:this},
             this.handlerAttendanceHistoryFilter
         );
+
+        // Page length dropdown event
+        $(this).on(
+            "change",
+            this.selectors.historyLength,
+            {classObject:this},
+            this.handlerAttendanceHistoryLengthChange
+        );
     }
+
     initializeDatePicker() {
         const classObject = this;
 
@@ -763,6 +806,7 @@ class HumAttendanceHistory extends HTMLElement{
         if($(classObject.selectors.historyMonth).find('option[value=""]').length === 0){
             $(classObject.selectors.historyMonth).prepend('<option value="">Select months</option>');
         }
+
         $(classObject.selectors.historyMonth).val("");
 
         for(let year = currentYear; year >= currentYear - 4; year--){
@@ -772,15 +816,28 @@ class HumAttendanceHistory extends HTMLElement{
         }
     }
 
+    // Existing filters
     handlerAttendanceHistoryFilter(event){
         const classObject = event.data.classObject;
-        classObject.attendanceHistoryDataTable.page.len(20).draw(true);
+        const length = Number($(classObject.selectors.historyLength).val()) || 20;
+
+        classObject.attendanceHistoryDataTable.page.len(length).draw(true);
+    }
+
+    // Page length dropdown change
+    handlerAttendanceHistoryLengthChange(event){
+        const classObject = event.data.classObject;
+        const length = Number($(event.currentTarget).val()) || 20;
+
+        classObject.attendanceHistoryDataTable.page.len(length).draw(true);
     }
 
     // Called by the Daily Attendance page every time the History tab is opened
     reloadAttendanceHistoryList(){
         if(this.attendanceHistoryDataTable){
-            this.attendanceHistoryDataTable.page.len(20).draw(true);
+            const length = Number($(this.selectors.historyLength).val()) || 20;
+
+            this.attendanceHistoryDataTable.page.len(length).draw(true);
         }
     }
 
@@ -789,7 +846,8 @@ class HumAttendanceHistory extends HTMLElement{
 
         const month = $(classObject.selectors.historyMonth).val() || "";
         const year = $(classObject.selectors.historyYear).val() || "";
-        const date =$(classObject.selectors.historyDate).val()|| null;
+        const date = $(classObject.selectors.historyDate).val() || null;
+
         // Month and year both selected: filter by Month (MM-yyyy). Otherwise list all attendance
         let filterBy = "";
         let filterValue = "";
@@ -801,7 +859,10 @@ class HumAttendanceHistory extends HTMLElement{
 
         this.attendanceHistoryFilterRequest = {
             draw: requestData.draw,
-            length: requestData.length,
+
+            // Send selected dropdown length to API
+            length: Number($(classObject.selectors.historyLength).val()) || requestData.length || 20,
+
             start: requestData.start,
 
             attendanceFilter:{
@@ -872,6 +933,7 @@ class HumAttendanceHistory extends HTMLElement{
                 data["status"] = this.forAttendanceStatus(res.attendanceStatusFlag);
                 data["sickleave"] = this.forLeaveApproved(res.sickLeaveFlag, "sick");
                 data["ecaleave"] = this.forLeaveApproved(res.extraCurricularActivitiesFlag, "eca");
+
                 attendanceHistoryArray.push(data);
             }
         }
@@ -879,7 +941,7 @@ class HumAttendanceHistory extends HTMLElement{
         return attendanceHistoryArray;
     }
 
-      ChangeDateFormat(dateString) {
+    ChangeDateFormat(dateString) {
         if (!dateString) {
             return "";
         }
@@ -913,8 +975,10 @@ class HumAttendanceHistory extends HTMLElement{
             this.attendanceHistoryDataTable=$(this).find(this.selectors.historyTable).DataTable(this.attendanceHistoryDataTableConfig);
         }
     }
- 
+
 }
+
+
 class HumAttendanceAnalysis extends HTMLElement{
     constructor(){
     super();
@@ -928,6 +992,7 @@ class HumAttendanceAnalysis extends HTMLElement{
     attendanceAnalysisYear: "#hum_attendance_analysis_year",
     attendanceAnalysisEcaCount: "#hum_attendance_analysis_eca_count",
     attendanceAnalysisSickCount: "#hum_attendance_analysis_sick_count",
+    attendanceLength:"#hum_analysis_page_length",
 
     // Analysis Table
     attendanceAnalysisTable: "#hum_attendance_analysis_table",
@@ -946,7 +1011,7 @@ class HumAttendanceAnalysis extends HTMLElement{
      this.attendanceAnalysisDataTableConfig = {
          processing: true,
          serverSide: true,
-         pageLength: 20,
+         pageLength: 10,
          searching: false,
       dom:
         't' +
@@ -1031,6 +1096,7 @@ class HumAttendanceAnalysis extends HTMLElement{
      };
 
   }
+
    connectedCallback(){
     try{
           this.bindAllRequiredEvents();
@@ -1061,6 +1127,13 @@ class HumAttendanceAnalysis extends HTMLElement{
             ].join(","),
             {classObject:this},
             this.handlerAttendanceAnalysisFilter
+        );
+
+        // Page length dropdown event
+        $(this).on("change",
+            this.selectors.attendanceLength,
+            {classObject:this},
+            this.handlerAttendanceAnalysisLengthChange
         );
 
         $(this).on("click",
@@ -1111,7 +1184,17 @@ initializeToolTip() {
 
     handlerAttendanceAnalysisFilter(event){
         const classObject = event.data.classObject;
-        classObject.attendanceAnalysisDataTable.page.len(20).draw(true);
+        const length = Number($(classObject.selectors.attendanceLength).val()) || 20;
+
+        classObject.attendanceAnalysisDataTable.page.len(length).draw(true);
+    }
+
+    // Page length dropdown change
+    handlerAttendanceAnalysisLengthChange(event){
+        const classObject = event.data.classObject;
+        const length = Number($(event.currentTarget).val()) || 20;
+
+        classObject.attendanceAnalysisDataTable.page.len(length).draw(true);
     }
 
     // View Dates button: absent dates of that student, or a full attendance message
@@ -1158,7 +1241,9 @@ initializeToolTip() {
     // Called by the Daily Attendance page every time the Analysis tab is opened
     reloadAttendanceAnalysisList(){
         if(this.attendanceAnalysisDataTable){
-            this.attendanceAnalysisDataTable.page.len(20).draw(true);
+            const length = Number($(this.selectors.attendanceLength).val()) || 20;
+
+            this.attendanceAnalysisDataTable.page.len(length).draw(true);
         }
     }
 
@@ -1181,7 +1266,10 @@ initializeToolTip() {
 
         this.attendanceAnalysisFilterRequest = {
             draw: requestData.draw,
-            length: requestData.length,
+
+            // Send selected dropdown length to API
+            length: Number($(classObject.selectors.attendanceLength).val()) || requestData.length || 20,
+
             start: requestData.start,
 
             attendanceFilter:{
@@ -1297,6 +1385,7 @@ initializeToolTip() {
     }
 
 }
+
 customElements.define("hum-attendance-analysis-temp",HumAttendanceAnalysis);
 customElements.define("hum-attendance-history-temp",HumAttendanceHistory);
 customElements.define("hum-daily-attendance",HumDailyAttendance);

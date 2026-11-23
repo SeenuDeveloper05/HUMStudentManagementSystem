@@ -15,6 +15,7 @@ class HumMarkEntry extends HTMLElement {
             filterSubject: "#hum_mark_filter_subject",
             filterComparison: "#hum_mark_filter_comparison",
             filterValue: "#hum_mark_filter_value",
+            filterLength:"#hum_mark_page_length",
             filterSearch: "#hum_mark_filter_search",
             applyFilterButton: "#hum_mark_filter_apply_button",
             resetFilterButton: "#hum_mark_filter_reset_button",
@@ -22,6 +23,7 @@ class HumMarkEntry extends HTMLElement {
             downloadExcelButton: "#hum_mark_download_excel_button",
             topperButton: "#hum_mark_topper_button",
             viewStudentQuarterButton: "#hum_mark_view_student_quarter_button",
+            filterChanges:"#filter_changes_lable",
             markTable: "#hum_mark_entry_table",
             markTableBody: "#hum_mark_table_body",
 
@@ -168,7 +170,7 @@ class HumMarkEntry extends HTMLElement {
         this.markEntryDataTableConfig = {
             processing: true,
             serverSide: true,
-            pageLength: 50,
+            pageLength: 10,
             searching: false,
             dom:
                 't' +
@@ -342,35 +344,47 @@ class HumMarkEntry extends HTMLElement {
             .on("click", this.selectors.emailMarkButton, { classObject: this }, this.handlerOpenEmailMarkModal)
             .on("click", this.selectors.emailSendButton, { classObject: this }, this.handlerSendMarkReportEmail)
             .on("click", this.selectors.downloadStudentReportButton, { classObject: this }, this.handlerDownloadStudentMarkReport)
-            .on("click", this.selectors.topperButton, { classObject: this }, this.handlerOpenTopperModal)
-            .on("click", this.selectors.topperSearchButton, { classObject: this }, this.handlerGetQuarterTopper)
+            .on("click", this.selectors.topperButton, { classObject: this }, this.handlerGetQuarterTopper)
+            // .on("click", this.selectors.topperSearchButton, { classObject: this }, this.handlerGetQuarterTopper)
             .on("click", this.selectors.downloadExcelButton, { classObject: this }, this.handlerOpenDownloadExcelModal)
-            .on("change", [this.selectors.downloadExcelQuarter, this.selectors.downloadExcelYear, this.selectors.downloadExcelBranch].join(","), { classObject: this }, this.handlerUpdateDownloadExcelPreview)
+            // .on("change", [this.selectors.downloadExcelQuarter, this.selectors.downloadExcelYear, this.selectors.downloadExcelBranch].join(","), { classObject: this }, this.handlerUpdateDownloadExcelPreview)
             .on("click", this.selectors.downloadExcelConfirmButton, { classObject: this }, this.handlerConfirmDownloadExcel)
             .on("click", this.selectors.viewStudentQuarterButton, { classObject: this }, this.handlerOpenViewStudentQuarterModal)
             .on("click", this.selectors.viewStudentSearchButton, { classObject: this }, this.handlerGetStudentQuarterMarks)
             .on("change", ".mark-input", { classObject: this }, this.markChanged)
-
-
+            // .on("change", this.selectors.filterLength, { classObject: this }, this.handlerMarkPageLengthChange)
+            .on("click",this.selectors.tableSaveButton,{ classObject: this },this.handlerSaveTableMarkEdit)
+            .on("click",this.selectors.tableCancelButton,{ classObject: this },this.handlerCancelTableMarkEdit)
             .on(
-                "click",
-                this.selectors.tableSaveButton,
+                "input change",
+                [
+                    this.selectors.filterBranch,
+                    this.selectors.filterResult,
+                    this.selectors.filterQuarter,
+                    this.selectors.filterYear,
+                    this.selectors.filterSubject,
+                    this.selectors.filterComparison,
+                    this.selectors.filterValue,
+                    this.selectors.filterSearch,
+                    this.selectors.filterLength
+                ].join(","),
                 { classObject: this },
-                this.handlerSaveTableMarkEdit
-            )
-
-          .on("click",
-            this.selectors.tableCancelButton,
-            { classObject: this },
-            this.handlerCancelTableMarkEdit
-)
+                this.handlerMarkResetVisibility
+     )
     }
 
     markChanged(event) {
         $(this).closest("tr").addClass("mark-changed")
     }
+//     handlerMarkPageLengthChange(event) {
+//     const classObject = event.data.classObject;
+//     const selectedLength = Number($(event.currentTarget).val()) || 10;
+
+//     classObject.markEntryDataTable.page.len(selectedLength).draw(true);
+// }
     handlerApplyMarkFilter(event) {
         const classObject = event.data.classObject;
+        const selectedLength = Number($(classObject).find(classObject.selectors.filterLength).val()) || 10;
         const branchOfStudy = $(classObject).find(classObject.selectors.filterBranch).val();
         const result = $(classObject).find(classObject.selectors.filterResult).val();
         const quarter = $(classObject).find(classObject.selectors.filterQuarter).val();
@@ -380,6 +394,7 @@ class HumMarkEntry extends HTMLElement {
         const markValue = Number($(classObject).find(classObject.selectors.filterValue).val().trim());
 
         classObject.markEntryAppliedFilters = {
+            selectedLength:selectedLength ||10,
             studentBranchOfStudy: branchOfStudy || "",
             result: result || "",
             quarter: this.currentMarkQuarter,
@@ -389,39 +404,79 @@ class HumMarkEntry extends HTMLElement {
             search: $(classObject).find(classObject.selectors.filterSearch).val().trim() || "",
             searchColumn: "Fullname"
         };
-        classObject.markEntryDataTable.page.len(50).draw(true);
+       classObject.markEntryDataTable.page.len(selectedLength).draw(true);
     }
-    handlerResetMarkFilter(event) {
-        const classObject = event.data.classObject;
-        $(classObject).find(classObject.selectors.filterBranch).val("");
-        $(classObject).find(classObject.selectors.filterResult).val("");
-        $(classObject).find(classObject.selectors.filterQuarter).val("");
-        $(classObject).find(classObject.selectors.filterYear).val("");
-        $(classObject).find(classObject.selectors.filterSubject).val("");
-        $(classObject).find(classObject.selectors.filterComparison).val("");
-        $(classObject).find(classObject.selectors.filterValue).val("");
-        $(classObject).find(classObject.selectors.filterSearch).val("");
+handlerResetMarkFilter(event) {
 
+    const classObject = event.data.classObject;
 
-        classObject.markEntryAppliedFilters = {
-            studentBranchOfStudy: "",
-            result: "",
-            quarter: null,
-            subjectName: "",
-            markComparison: "",
-            markValue: null,
-            search: "",
-            searchColumn: "Fullname"
+    $(classObject).find(classObject.selectors.filterLength).val(10);
+    $(classObject).find(classObject.selectors.filterBranch).val("");
+    $(classObject).find(classObject.selectors.filterResult).val("");
+    $(classObject).find(classObject.selectors.filterQuarter).val("");
+    $(classObject).find(classObject.selectors.filterYear).val("");
+    $(classObject).find(classObject.selectors.filterSubject).val("");
+    $(classObject).find(classObject.selectors.filterComparison).val("");
+    $(classObject).find(classObject.selectors.filterValue).val("");
+    $(classObject).find(classObject.selectors.filterSearch).val("");
 
-        };
-        classObject.markEntryDataTable.page.len(50).draw(true);
+    classObject.markEntryAppliedFilters = {
+        selectedLength: 10,
+        studentBranchOfStudy: "",
+        result: "",
+        quarter: null,
+        subjectName: "",
+        markComparison: "",
+        markValue: null,
+        search: "",
+        searchColumn: "Fullname"
+    };
+
+    classObject.markEntryDataTable.page.len(10).draw(true);
+
+    // Hide Reset button
+    $(classObject).find(classObject.selectors.resetFilterButton).addClass("d-none");
+}
+
+    handlerMarkResetVisibility(event) {
+
+    const classObject = event.data.classObject;
+
+    const branch = $(classObject).find(classObject.selectors.filterBranch).val() || "";
+    const result = $(classObject).find(classObject.selectors.filterResult).val() || "";
+    const quarter = $(classObject).find(classObject.selectors.filterQuarter).val() || "";
+    const year = $(classObject).find(classObject.selectors.filterYear).val() || "";
+    const subject = $(classObject).find(classObject.selectors.filterSubject).val() || "";
+    const comparison = $(classObject).find(classObject.selectors.filterComparison).val() || "";
+    const value = $(classObject).find(classObject.selectors.filterValue).val().trim();
+    const search = $(classObject).find(classObject.selectors.filterSearch).val().trim();
+    const length = Number($(classObject).find(classObject.selectors.filterLength).val()) || 10;
+
+    if (
+        branch !== "" ||
+        result !== "" ||
+        quarter !== "" ||
+        year !== "" ||
+        subject !== "" ||
+        comparison !== "" ||
+        value !== "" ||
+        search !== "" ||
+        length !== 10
+    ) {
+        $(classObject).find(classObject.selectors.resetFilterButton).removeClass("d-none");
+         $(classObject).find(classObject.selectors.filterChanges).text(" Filter conditions changed, Click submit.");
     }
+    else {
+        $(classObject).find(classObject.selectors.resetFilterButton).addClass("d-none");
+         $(classObject).find(classObject.selectors.filterChanges).text("");
+    }
+}
     getStudentListForMarkEntry(requestData) {
 
         const studentRequest = {
 
             draw: requestData.draw,
-            length: 50,
+            length: Number($(this).find(this.selectors.filterLength).val()) || requestData.length || 10,
             start: requestData.start,
 
             filter: {
@@ -463,7 +518,7 @@ class HumMarkEntry extends HTMLElement {
 
         const markRequest = this.markEntryFormatRequestData(requestData);
 
-        markRequest.length = 50;
+        markRequest.length = Number($(this).find(this.selectors.filterLength).val()) || requestData.length || 10;
 
         return $.ajax({
             url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/mark/list",
@@ -784,7 +839,7 @@ class HumMarkEntry extends HTMLElement {
             data: JSON.stringify({
 
                 draw: 1,
-                length: 50,
+                 length: Number($(this).find(this.selectors.filterLength).val()) || requestData.length || 10,
                 start: 0,
 
                 filter: {
@@ -1301,43 +1356,44 @@ class HumMarkEntry extends HTMLElement {
         });
 
     }
-    handlerOpenTopperModal(event) {
+    // handlerOpenTopperModal(event) {
 
-        const classObject = event.data.classObject;
+    //     const classObject = event.data.classObject;
 
-        // Reset filters
-        $(classObject).find(classObject.selectors.topperQuarter).val("");
-        $(classObject).find(classObject.selectors.topperYear).val("");
-        $(classObject).find(classObject.selectors.topperBranch).val("");
+    //     // Reset filters
+    //     // $(classObject).find(classObject.selectors.filterQuarter).val("");
+    //     // $(classObject).find(classObject.selectors.topperYear).val("");
+    //     // $(classObject).find(classObject.selectors.topperBranch).val("");
 
-        // Hide previous result and message
-        $(classObject).find(classObject.selectors.topperResult)
-            .removeClass("d-block")
-            .addClass("d-none");
+    //     // Hide previous result and message
+    //     $(classObject).find(classObject.selectors.topperResult)
+    //         .removeClass("d-block")
+    //         .addClass("d-none");
 
-        $(classObject).find(classObject.selectors.topperMessage)
-            .removeClass("d-block")
-            .addClass("d-none")
-            .text("");
+    //     $(classObject).find(classObject.selectors.topperMessage)
+    //         .removeClass("d-block")
+    //         .addClass("d-none")
+    //         .text("");
 
-        // Open modal
-        $(classObject).find(classObject.selectors.topperModal).modal("show");
+    //     // Open modal
+        
 
-    }
+    
     handlerGetQuarterTopper(event) {
 
         const classObject = event.data.classObject;
+        $(classObject).find(classObject.selectors.topperModal).modal("show");
 
-        const quarter = $(classObject).find(classObject.selectors.topperQuarter).val();
-        const year = $(classObject).find(classObject.selectors.topperYear).val();
-        const branch = $(classObject).find(classObject.selectors.topperBranch).val();
+        // const quarter = $(classObject).find(classObject.selectors.filterQuarter).val();
+        // const year = $(classObject).find(classObject.selectors.filterYear).val();
+        const branch = $(classObject).find(classObject.selectors.filterBranch).val()||"";
 
-        if (!quarter || !year) {
+        if (!classObject.getCurrentMarkQuarter()) {
             toastr.error("Please select Quarter and Year");
             return;
         }
 
-        const selectedQuarter = quarter + "-" + year;
+        const selectedQuarter = classObject.getCurrentMarkQuarter();
 
         // Hide previous result
         $(classObject).find(classObject.selectors.topperResult)
@@ -1357,10 +1413,10 @@ class HumMarkEntry extends HTMLElement {
             params.append("branch", branch);
         }
 
-        const searchButton = $(classObject).find(classObject.selectors.topperSearchButton);
+        // const searchButton = $(classObject).find(classObject.selectors.topperSearchButton);
 
-        searchButton.prop("disabled", true)
-            .html('<i class="fa-solid fa-spinner fa-spin me-1"></i> Loading...');
+        // searchButton.prop("disabled", true)
+        //     .html('<i class="fa-solid fa-spinner fa-spin me-1"></i> Loading...');
 
         $.ajax({
 
@@ -1394,12 +1450,12 @@ class HumMarkEntry extends HTMLElement {
 
             },
 
-            complete: function () {
+            // complete: function () {
 
-                searchButton.prop("disabled", false)
-                    .html('<i class="fa-solid fa-magnifying-glass me-1"></i> View Topper');
+            //     searchButton.prop("disabled", false)
+            //         .html('<i class="fa-solid fa-magnifying-glass me-1"></i> View Topper');
 
-            }
+            // }
 
         });
 
@@ -1529,70 +1585,25 @@ class HumMarkEntry extends HTMLElement {
     handlerOpenDownloadExcelModal(event) {
 
         const classObject = event.data.classObject;
-
-        // Reset filters
-        $(classObject).find(classObject.selectors.downloadExcelQuarter).val("");
-        $(classObject).find(classObject.selectors.downloadExcelYear).val("");
-        $(classObject).find(classObject.selectors.downloadExcelBranch).val("");
-
-        // Reset preview
-        $(classObject).find(classObject.selectors.downloadExcelPreviewQuarter)
-            .text("Select a quarter and year to continue.");
-
-        $(classObject).find(classObject.selectors.downloadExcelPreviewBranch)
-            .text("All Branches");
-
-        // Enable download button
-        $(classObject).find(classObject.selectors.downloadExcelConfirmButton)
-            .prop("disabled", false)
-            .html('<i class="fa-solid fa-download me-1"></i> Download Excel Report');
-
         // Open modal
         $(classObject).find(classObject.selectors.downloadExcelModal).modal("show");
 
     }
-    handlerUpdateDownloadExcelPreview(event) {
 
-        const classObject = event.data.classObject;
-
-        const quarter = $(classObject).find(classObject.selectors.downloadExcelQuarter).val();
-        const year = $(classObject).find(classObject.selectors.downloadExcelYear).val();
-        const branch = $(classObject).find(classObject.selectors.downloadExcelBranch).val();
-
-        if (quarter && year) {
-
-            $(classObject).find(classObject.selectors.downloadExcelPreviewQuarter)
-                .text("Quarter: " + quarter + "-" + year);
-
-        } else {
-
-            $(classObject).find(classObject.selectors.downloadExcelPreviewQuarter)
-                .text("Select a quarter and year to continue.");
-
-        }
-
-        const branchText = branch
-            ? $(classObject).find(classObject.selectors.downloadExcelBranch + " option:selected").text()
-            : "All Branches";
-
-        $(classObject).find(classObject.selectors.downloadExcelPreviewBranch)
-            .text(branchText);
-
-    }
     handlerConfirmDownloadExcel(event) {
 
         const classObject = event.data.classObject;
 
-        const quarter = $(classObject).find(classObject.selectors.downloadExcelQuarter).val();
-        const year = $(classObject).find(classObject.selectors.downloadExcelYear).val();
+        // const quarter = $(classObject).find(classObject.selectors.downloadExcelQuarter).val();
+        // const year = $(classObject).find(classObject.selectors.downloadExcelYear).val();
         const branch = $(classObject).find(classObject.selectors.downloadExcelBranch).val();
 
-        if (!quarter || !year) {
+        if (!classObject.getCurrentMarkQuarter()) {
             toastr.error("Please select Quarter and Year");
             return;
         }
 
-        const selectedQuarter = quarter + "-" + year;
+        const selectedQuarter = classObject.getCurrentMarkQuarter();
 
         classObject.downloadQuarterMarksExcel(selectedQuarter, branch);
 
@@ -1725,7 +1736,7 @@ class HumMarkEntry extends HTMLElement {
 
             data: JSON.stringify({
                 draw: 1,
-                length: 10,
+                length: Number($(this).find(this.selectors.filterLength).val()) || requestData.length || 10,
                 start: 0,
                 filter: {
                     gender: "",
@@ -2093,7 +2104,7 @@ class HumMarkEntry extends HTMLElement {
     markEntryFormatRequestData(requestData) {
         this.markEntryFilterRequest = {
             draw: requestData.draw,
-            length: requestData.length,
+            length: Number($(this).find(this.selectors.filterLength).val()) || requestData.length || 10,
             start: requestData.start,
 
             markFilter: {

@@ -121,6 +121,17 @@ class HumHolidayManagement extends HTMLElement {
         $(this).on("click",this.selectors.confirmCancelHolidayButton,{ classObject: this },this.handlerConfirmCancelHoliday);
         $(this).on("click",this.selectors.holidayDetailsCancelButton,{ classObject: this },this.handlerCancelFromDetails); 
         $(this).on("input change",`${this.selectors.cancelHolidayDate}, ${this.selectors.cancelHolidayReason}`,{ classObject: this },this.handlerCancelHolidayInput);
+        $(this).on(
+    "input change",
+    [
+        this.selectors.holidayTypeFilter,
+        this.selectors.holidayStatusFilter,
+        this.selectors.holidayMonthFilter,
+        this.selectors.holidayYearValue
+    ].join(","),
+    { classObject: this },
+    this.handlerResetFilterVisibility
+);
     }
      
     //  plugins
@@ -188,7 +199,7 @@ class HumHolidayManagement extends HTMLElement {
     const classObject = this;
 
     const datepickerConfig = {
-        dateFormat: "Y-m-d",
+        dateFormat: "m-d-Y",
         allowInput: true,
       
         
@@ -228,16 +239,19 @@ class HumHolidayManagement extends HTMLElement {
 
         // week view gives date with time -> take only yyyy-mm-dd
         const clickedDate = info.dateStr.substring(0, 10);
+        const dateParts = clickedDate.split("-");
+     const displayDate = dateParts[1] + "-" + dateParts[2] + "-" + dateParts[0];
 
-        const existingHoliday = classObject.holidayCalendar.getEvents().find(function (calendarEvent) {
-            return calendarEvent.startStr.substring(0, 10) === clickedDate;
-        });
+      classObject.holidayOpenDeclareModal(displayDate);
+        // const existingHoliday = classObject.holidayCalendar.getEvents().find(function (calendarEvent) {
+        //     return calendarEvent.startStr.substring(0, 10) === clickedDate;
+        // });
 
-        if (existingHoliday) {
-            classObject.holidayShowDetails(existingHoliday.extendedProps);
-        } else {
-            classObject.holidayOpenDeclareModal(clickedDate);
-        }
+        // if (existingHoliday) {
+        //     classObject.holidayShowDetails(existingHoliday.extendedProps);
+        // } else {
+        //     classObject.holidayOpenDeclareModal(clickedDate);
+        // }
     }
 
     // Cancel button inside holiday details modal
@@ -247,7 +261,7 @@ class HumHolidayManagement extends HTMLElement {
         if (!classObject.holidaySelected || classObject.holidaySelected.holidayCancelledFlag === "Y") {
             return;
         }
-        const selectedDate = classObject.holidaySelected.holidayDate;   // yyyy-mm-dd
+        const selectedDate = this. holidayChangeDateFormat(classObject.holidaySelected.holidayDate);   // yyyy-mm-dd
          const confrimReason= classObject.selectors.cancelHolidayReason;
         // close details modal first, then open cancel modal (two modals should not overlap)
          $(classObject.selectors.confirmCancelHolidayButton).hide(); 
@@ -304,20 +318,51 @@ class HumHolidayManagement extends HTMLElement {
         classObject.getHolidayList();
     }
 
-    handlerResetFilterBtn(event) {
-        const classObject = event.data.classObject;
-        const today = new Date();
+handlerResetFilterBtn(event) {
 
-        $(classObject.selectors.holidayTypeFilter).val("");
-        $(classObject.selectors.holidayStatusFilter).val("");
-        $(classObject.selectors.holidayMonthFilter)
-            .val(String(today.getMonth() + 1).padStart(2, "0"));
-        $(classObject.selectors.holidayYearValue).val(String(today.getFullYear()));
+    const classObject = event.data.classObject;
+    const today = new Date();
 
-        classObject.holidayCalendar.gotoDate(today);
-        classObject.getHolidayList();
+    $(classObject.selectors.holidayTypeFilter).val("");
+    $(classObject.selectors.holidayStatusFilter).val("");
+
+    $(classObject.selectors.holidayMonthFilter)
+        .val(String(today.getMonth() + 1).padStart(2, "0"));
+
+    $(classObject.selectors.holidayYearValue).val(String(today.getFullYear()));
+
+    classObject.holidayCalendar.gotoDate(today);
+    classObject.getHolidayList();
+
+    // Hide reset button after resetting filters
+    $(classObject.selectors.resetFiltersButton).addClass("d-none");
+}
+  handlerResetFilterVisibility(event) {
+
+    const classObject = event.data.classObject;
+
+    const today = new Date();
+
+    const defaultMonth = String(today.getMonth() + 1).padStart(2, "0");
+    const defaultYear = String(today.getFullYear());
+
+    const holidayType = $(classObject.selectors.holidayTypeFilter).val();
+    const holidayStatus = $(classObject.selectors.holidayStatusFilter).val();
+    const holidayMonth = $(classObject.selectors.holidayMonthFilter).val();
+    const holidayYear = $(classObject.selectors.holidayYearValue).val();
+
+    if (
+        holidayType !== "" ||
+        holidayStatus !== "" ||
+        holidayMonth !== defaultMonth ||
+        holidayYear !== defaultYear
+    ) {
+        $(classObject.selectors.resetFiltersButton).removeClass("d-none");
     }
-
+    else {
+        $(classObject.selectors.resetFiltersButton).addClass("d-none");
+    }
+}
     // year dropdown + default month / year = today
     handlerYearOption() {
         const self = this;
@@ -690,7 +735,8 @@ class HumHolidayManagement extends HTMLElement {
         if (response.status === "Success" && Array.isArray(response.data)) {
 
             for (const res of response.data) {
-                const holidayDate = classObject.holidayChangeDateFormat(res.holidayDate);   // yyyy-mm-dd
+                const dateParts = res.holidayDate.split("-");
+                const holidayDate = dateParts[2] + "-" + dateParts[1] + "-" + dateParts[0];  // yyyy-mm-dd
                 const holidayName = classObject.holidayTypeName(res.holidayType);
                 const isCancelled = res.holidayCancelledFlag === "Y";
 
@@ -773,15 +819,28 @@ class HumHolidayManagement extends HTMLElement {
     }
 
     // yyyy-mm-dd <-> dd-mm-yyyy (same swap works both ways)
-    holidayChangeDateFormat(dateString) {
-        if (!dateString) {
-            return "";
-        }
+// Convert m-d-Y <-> Y-m-d
+holidayChangeDateFormat(dateString) {
+    if (!dateString) {
+        return "";
+    }
 
-        const dateParts = dateString.split("-");
+    const dateParts = dateString.split("-");
 
+    // API date: dd-mm-yyyy
+    if (dateParts[0].length === 2 && dateParts[2].length === 4) {
         return dateParts[2] + "-" + dateParts[1] + "-" + dateParts[0];
     }
+
+    // Display date: m-d-Y -> FullCalendar date: Y-m-d
+    if (dateParts[2].length === 4) {
+        return dateParts[2] + "-" +
+            dateParts[0].padStart(2, "0") + "-" +
+            dateParts[1].padStart(2, "0");
+    }
+
+    return dateString;
+}
 
     // declare / cancel API response ->
     //   { totalcount, successCount, failureCount, responses:[{status, date, data}] }
