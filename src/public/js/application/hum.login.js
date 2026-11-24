@@ -1,24 +1,16 @@
 const HumLoginPage = function (){
    const self = this;
  
-     this.selectors ={
+     this.selectors = {
         loginForm:"#hum_login_form",
         username:"#hum_login_username",
         password:"#hum_login_password",
         loginButton:"#hum_login_submit",
         togglePassword: "#hum_toggle_password"
      };
-    //  this.users=[
-    //     { username: "Admin1", password: "Humworld@1" },
-    //     { username: "Seenu123", password: "Humworld@1" },
-    //     { username: "Kamal345", password: "Humworld@1" }
-    //  ];
 
+     this.validationRules = {
 
-     this.initializeValidator =function (){
-        $(self.selectors.loginForm).validate({
-           
-           rules:{
               hum_login_username:{
                 required:true,
                   // lettersonly: true
@@ -26,7 +18,11 @@ const HumLoginPage = function (){
               hum_login_password:{
                 required: true
               }
-           },
+            }
+     this.initializeValidator =function (){
+        $(self.selectors.loginForm).validate({
+           
+           rules:this.validationRules,
            messages:{
             hum_login_username:{
                 required:"Please enter your username",
@@ -39,14 +35,12 @@ const HumLoginPage = function (){
 
           errorPlacement: function (error, element) {
              error.css("color", "red");
-          if (element.closest(".input-group").length) {
-        error.insertAfter(element.closest(".input-group"));
-    } else {
-        error.insertAfter(element);
-    }
-
+                if (element.closest(".input-group").length) {
+                error.insertAfter(element.closest(".input-group"));
+                } else {
+                    error.insertAfter(element);
+                }
         }
-
         });
      };
 
@@ -57,8 +51,6 @@ const HumLoginPage = function (){
 
 
   this.handleLogin = function () {
-
-    const form = $(self.selectors.loginForm);
 
     const username = $(self.selectors.username).val().trim();
     const password = $(self.selectors.password).val();
@@ -71,7 +63,6 @@ const HumLoginPage = function (){
     );
 
     const loggedInUser = users.find(function (user) {
-
         return user.username === username &&
                user.password === password;
 
@@ -101,15 +92,9 @@ const HumLoginPage = function (){
         });
 
     } else {
-         if(username&&password){
-                 $("#hum_login_error").text(
-            "Invalid Credentials"
-        );
-         }else{
-                       $("#hum_login_error").text("");
-         }
-         return;     
-            
+       
+         $("#hum_login_error").text(username&&password?"Invalid Credentials":"");
+      
     }
 
 };

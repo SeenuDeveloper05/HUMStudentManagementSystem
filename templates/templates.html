@@ -664,7 +664,7 @@
                 Show Entries
             </label>
 
-            <select id="hum_teacher_page_length" class="form-select">
+            <select id="hum_teacher_page_length" class="form-select form_teacher_filter">
                 <option value="10" selected>10</option>
                 <option value="25">25</option>
                 <option value="50">50</option>
@@ -679,7 +679,7 @@
                 Teacher Status
             </label>
 
-            <select class="form-select" id="hum_teacher_filter_status">
+            <select class="form-select form_teacher_filter" id="hum_teacher_filter_status">
                 <option value="A" selected>Active</option>
                 <option value="I">Inactive</option>
             </select>
@@ -692,7 +692,7 @@
                 Search By
             </label>
 
-            <select class="form-select"
+            <select class="form-select form_teacher_filter"
                 id="hum_teacher_filter_search_column">
                 <option value="TeacherName">Teacher Name</option>
                 <option value="TeacherEmail">Teacher Email</option>
@@ -707,7 +707,7 @@
             </label>
 
             <input type="text"
-                class="form-control"
+                class="form-control form_teacher_filter"
                 id="hum_teacher_filter_search"
                 placeholder="Enter teacher name or email">
         </div>
@@ -1175,7 +1175,7 @@
 			<div class="row g-3 align-items-end">
               <div class="col-12 col-md-1">
                     <label for="hum_student_page_length" class="student-filter-label">Show</label>
-                    <select id="hum_student_page_length" class="form-select student-filter-control" style="width: 80px;">
+                    <select id="hum_student_page_length" class="form-select student-filter-control form_student_filter" style="width: 80px;">
                     <option value="10" selected>10</option>
                     <option value="25">25</option>
                     <option value="50">50</option>
@@ -1191,7 +1191,7 @@
 
 					<div class="row g-2">
 						<div class="col-5">
-							<select class="form-select student-filter-control" id="hum_student_search_column">
+							<select class="form-select student-filter-control form_student_filter" id="hum_student_search_column">
 								<option value="Fullname">Full Name</option>
 								<option value="Phone">Phone Number</option>
 								<option value="Email">Email</option>
@@ -1202,7 +1202,7 @@
 							<div class="student-search-row">
 								<span class="student-search-icon" aria-hidden="true">&#9906;</span>
 
-								<input type="text" id="hum_student_search_input" placeholder="Search students..."
+								<input type="text" class="form_student_filter" id="hum_student_search_input" placeholder="Search students..."
 									autocomplete="off">
 							</div>
 						</div>
@@ -1215,7 +1215,7 @@
 						Department
 					</label>
 
-					<select class="form-select student-filter-control" id="hum_student_department_filter">
+					<select class="form-select student-filter-control form_student_filter" id="hum_student_department_filter">
 						<option value="">All departments</option>
 						<option value="CSCI">Computer Science</option>
 						<option value="BIOL">Biology</option>
@@ -1231,7 +1231,7 @@
 						Gender
 					</label>
 
-					<select class="form-select student-filter-control" id="hum_student_gender_filter">
+					<select class="form-select student-filter-control form_student_filter" id="hum_student_gender_filter">
 						<option value="">All genders</option>
 						<option value="MALE">Male</option>
 						<option value="FEMA">Female</option>
@@ -1244,7 +1244,7 @@
 						Residence
 					</label>
 
-					<select class="form-select student-filter-control" id="hum_student_residence_filter">
+					<select class="form-select student-filter-control form_student_filter" id="hum_student_residence_filter">
 						<option value="">All residences</option>
 						<option value="H">Hosteller</option>
 						<option value="D">Day Scholar</option>
@@ -1257,7 +1257,7 @@
 						Status
 					</label>
 
-					<select class="form-select student-filter-control" id="hum_student_status_filter">
+					<select class="form-select student-filter-control form_student_filter" id="hum_student_status_filter">
 
 						<option value="A">Active</option>
 						<option value="I">Inactive</option>
@@ -2743,7 +2743,7 @@
 						Holiday Type
 					</label>
 
-					<select id="hum_holiday_type_filter" class="form-select holiday-filter-control">
+					<select id="hum_holiday_type_filter" class="form-select holiday-filter-control form-holiday-filter">
 						<option value="">All</option>
 						<option value="WEEK">Weekly Off</option>
 						<option value="NATL">National</option>
@@ -2759,7 +2759,7 @@
 						Holiday Status
 					</label>
 
-					<select id="hum_holiday_status_filter" class="form-select holiday-filter-control">
+					<select id="hum_holiday_status_filter" class="form-select holiday-filter-control form-holiday-filter">
 						<option value="">All</option>
 						<option value="N">Active</option>
 						<option value="Y">Cancelled</option>
@@ -2772,7 +2772,7 @@
                          <span class="hum-mark-required ">*</span>
 					</label>
 
-					<select id="hum_holiday_month_filter" class="form-select holiday-filter-control">
+					<select id="hum_holiday_month_filter" class="form-select holiday-filter-control form-holiday-filter">
 						<option value="01">January</option>
 						<option value="02">February</option>
 						<option value="03">March</option>
@@ -2795,7 +2795,7 @@
 					</label>
 
 					<!-- options are filled from JS (handlerYearOption) -->
-					<select id="hum_holiday_year_value" class="form-select holiday-filter-control">
+					<select id="hum_holiday_year_value" class="form-select holiday-filter-control form-holiday-filter">
 
                     </select>
 				</div>
@@ -2811,6 +2811,7 @@
 				</div>
 
 			</div>
+             <div id="hum_holiday_changes" style="color:orange; font-size: 10px; font-weight: 600; display: flex; justify-content: end;"></div>
 		</div>
 
 		<!-- CALENDAR CONTAINER -->
@@ -3911,7 +3912,7 @@
                         Branch of Study
                     </label>
 
-                    <select class="form-select hum-attendance-control"
+                    <select class="form-select hum-attendance-control hum-filter-analysis"
                         id="hum_attendance_analysis_branch">
 
                         <option value="">All Branches</option>
@@ -3932,7 +3933,7 @@
                           <span class="hum-mark-required ">*</span>
                     </label>
 
-                    <select class="form-select hum-attendance-control"
+                    <select class="form-select hum-attendance-control hum-filter-analysis"
                         id="hum_attendance_analysis_month">
                         <option value="">All months</option>
                         <option value="01">January</option>
@@ -3959,7 +3960,7 @@
                          <span class="hum-mark-required ">*</span>
                     </label>
 
-                    <select class="form-select hum-attendance-control"
+                    <select class="form-select hum-attendance-control hum-filter-analysis"
                         id="hum_attendance_analysis_year">
 
                         <option value="">Select year</option>
@@ -3975,7 +3976,7 @@
                     </label>
 
                     <input type="number"
-                        class="form-control hum-attendance-control"
+                        class="form-control hum-attendance-control filter-input-analysis"
                         id="hum_attendance_analysis_eca_count"
                         min="0"
                         placeholder="Enter count">
@@ -3989,7 +3990,7 @@
                     </label>
 
                     <input type="number"
-                        class="form-control hum-attendance-control"
+                        class="form-control hum-attendance-control filter-input-analysis"
                         id="hum_attendance_analysis_sick_count"
                         min="0"
                         placeholder="Enter count">
@@ -4040,7 +4041,7 @@
             <div class="row g-3 align-items-end">
                           <div class="col-12 col-md-1">
                     <label for="hum_history_page_length" class="hum-attendance-label">Show</label>
-                    <select id="hum_history_page_length" class="form-select hum-attendance-control" style="width: 80px;">
+                    <select id="hum_history_page_length" class="form-select hum-attendance-control hum-filter" style="width: 80px;">
                     <option value="10" selected>10</option>
                     <option value="25">25</option>
                     <option value="50">50</option>
@@ -4055,7 +4056,7 @@
         Month 
     </label>
 
-    <select class="form-select hum-attendance-control"
+    <select class="form-select hum-attendance-control hum-filter"
         id="hum_attendance_history_month">
         <option value="01">January</option>
         <option value="02">February</option>
@@ -4077,7 +4078,7 @@
         for="hum_attendance_history_year">
         Year
     </label>
-    <select class="form-select hum-attendance-control"
+    <select class="form-select hum-attendance-control hum-filter"
         id="hum_attendance_history_year">
         <option value="">Select year</option>
     </select>
@@ -4092,7 +4093,7 @@
 
     <div class="position-relative">
         <input type="text"
-            class="form-control hum-attendance-control pe-5"
+            class="form-control hum-attendance-control hum-filter pe-5"
             id="hum_attendance_history_date"
             autocomplete="off"
             required>
@@ -4110,7 +4111,7 @@
                         Department
                     </label>
 
-                    <select class="form-select hum-attendance-control"
+                    <select class="form-select hum-attendance-control hum-filter"
                         id="hum_attendance_history_department">
 
                         <option value="">All departments</option>
@@ -4130,7 +4131,7 @@
                         Attendance
                     </label>
 
-                    <select class="form-select hum-attendance-control"
+                    <select class="form-select hum-attendance-control hum-filter"
                         id="hum_attendance_history_status">
 
                         <option value="">All</option>
@@ -4147,7 +4148,7 @@
                         Sick Leave
                     </label>
 
-                    <select class="form-select hum-attendance-control"
+                    <select class="form-select hum-attendance-control hum-filter"
                         id="hum_attendance_history_sick_leave">
 
                         <option value="">All</option>
@@ -4164,7 +4165,7 @@
                         ECA Leave
                     </label>
 
-                    <select class="form-select hum-attendance-control"
+                    <select class="form-select hum-attendance-control hum-filter"
                         id="hum_attendance_history_eca_leave">
 
                         <option value="">All</option>
@@ -4787,7 +4788,7 @@ body.modal-open {
             <div class="row g-3 align-items-end">
                           <div class="col-12 col-md-1">
                     <label for="hum_quarter_page_length" class="form-label hum-quarterly-filter-label">Show</label>
-                    <select id="hum_quarter_page_length" class="form-select" style="width: 80px;">
+                    <select id="hum_quarter_page_length" class="form-select form-filter-changes" style="width: 80px;">
                     <option value="10" selected>10</option>
                     <option value="25">25</option>
                     <option value="50">50</option>
@@ -4805,7 +4806,7 @@ body.modal-open {
 
                     </label>
 
-                    <select class="form-select"
+                    <select class="form-select form-filter-changes"
                         id="hum_quarterly_filter_quarter">
 
                         <option value="">Select Quarter</option>
@@ -4827,7 +4828,7 @@ body.modal-open {
 
                     </label>
 
-                    <select class="form-select"
+                    <select class="form-select form-filter-changes"
                         id="hum_quarterly_filter_year">
                     </select>
 
@@ -4843,7 +4844,7 @@ body.modal-open {
 
                     </label>
 
-                    <select class="form-select"
+                    <select class="form-select form-filter-changes"
                         id="hum_quarterly_filter_compliance">
 
                         <option value="">All Statuses</option>
@@ -4863,7 +4864,7 @@ body.modal-open {
 
                     </label>
 
-                    <select class="form-select"
+                    <select class="form-select form-filter-changes"
                         id="hum_quarterly_filter_branch">
 
                         <option value="">All Departments</option>
@@ -4887,7 +4888,7 @@ body.modal-open {
                     </label>
 
                     <input type="text"
-                        class="form-control"
+                        class="form-control form-filter-changes"
                         id="hum_quarterly_filter_student"
                         placeholder="Search by student name">
 
@@ -6689,11 +6690,8 @@ body.modal-open {
         <!-- Page Header -->
 
         <div class="hum-mark-page-header">
-
             <div>
-
                 <h3>Mark Entry</h3>
-
                 <p>
                     Enter and manage student marks by subject and quarter.
                 </p>
@@ -6716,7 +6714,7 @@ body.modal-open {
 
                                 <div class="col-12 col-md-4 col-lg-1">
                     <label for="hum_mark_page_length" class="hum-mark-filter-label">Show</label>
-                    <select id="hum_mark_page_length" class="form-select" style="width: 80px;">
+                    <select id="hum_mark_page_length" class="form-select hum-mark-filter" style="width: 80px;">
                     <option value="10" selected>10</option>
                     <option value="25">25</option>
                     <option value="50">50</option>
@@ -6735,7 +6733,7 @@ body.modal-open {
 
                     </label>
 
-                    <select class="form-select"
+                    <select class="form-select hum-mark-filter"
                         id="hum_mark_filter_branch">
 
                         <option value="">All Departments</option>
@@ -6762,7 +6760,7 @@ body.modal-open {
 
                     </label>
 
-                    <select class="form-select"
+                    <select class="form-select hum-mark-filter"
                         id="hum_mark_filter_result">
 
                         <option value="">All Results</option>
@@ -6815,8 +6813,6 @@ body.modal-open {
                     </select>
 
                 </div>
-
-
                 <!-- Subject -->
 
                  <div class="col-12 col-md-4 col-lg-2">
@@ -6828,7 +6824,7 @@ body.modal-open {
 
                     </label>
 
-                    <select class="form-select"
+                    <select class="form-select hum-mark-filter"
                         id="hum_mark_filter_subject">
 
                         <option value="">All Subjects</option>
@@ -6854,7 +6850,7 @@ body.modal-open {
 
                     </label>
 
-                    <select class="form-select"
+                    <select class="form-select hum-mark-filter"
                         id="hum_mark_filter_comparison">
 
                         <option value="">Any</option>
@@ -6879,7 +6875,7 @@ body.modal-open {
                     </label>
 
                     <input type="number"
-                        class="form-control"
+                        class="form-control hum-mark-filter"
                         id="hum_mark_filter_value"
                         placeholder="Enter mark"
                         min="0">
@@ -6889,7 +6885,7 @@ body.modal-open {
 
                 <!-- Search -->
 
-                <div class="col-12 col-lg-9">
+                <div class="col-12 col-lg-5">
 
                     <label for="hum_mark_filter_search"
                         class="form-label hum-mark-filter-label">
@@ -6899,7 +6895,7 @@ body.modal-open {
                     </label>
 
                     <input type="text"
-                        class="form-control"
+                        class="form-control hum-mark-filter"
                         id="hum_mark_filter_search"
                         placeholder="Search by student name or ID...">
 
@@ -6908,24 +6904,17 @@ body.modal-open {
 
                 <!-- Apply and Reset -->
 
-                <div class="col-12 col-lg-3 d-flex gap-2">
-
+                <div class="col-12 col-lg-7 d-flex justify-content-lg-end gap-2">
                     <button type="button"
-                        class="btn hum-mark-btn flex-fill"
+                        class="btn hum-mark-btn"
                         id="hum_mark_filter_apply_button">
-
-                        <i class="fa-solid fa-magnifying-glass me-1"></i>
                         Submit
-
                     </button>
 
                     <button type="button"
-                        class="btn hum-mark-outline-btn flex-fill d-none"
+                        class="btn hum-mark-outline-btn d-none"
                         id="hum_mark_filter_reset_button">
-
-                        <i class="fa-solid fa-rotate-left me-1"></i>
                         Reset
-
                     </button>
 
                 </div>

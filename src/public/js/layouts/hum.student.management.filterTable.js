@@ -1,531 +1,362 @@
-class HumStudentManagementFiltertable extends HTMLElement{
-
-    constructor(){
-       super();
-
-       const template =document.getElementById("hum_student_management_filtertable");
-
-       this.appendChild(
-         template.content.cloneNode(true)
-       );
-
- this.selectors = {
-    studentManagementPage: ".hum-student-page",
-
-    addStudentButton: "#hum_student_add_btn",
-
-    searchColumn: "#hum_student_search_column",
-    searchInput: "#hum_student_search_input",
-
-    departmentFilter: "#hum_student_department_filter",
-    genderFilter: "#hum_student_gender_filter",
-    residenceFilter: "#hum_student_residence_filter",
-    statusFilter: "#hum_student_status_filter",
-    lengthFilter:"#hum_student_page_length",
-
-    studentTable: "#hum_student_table",
-    studentTableBody: "#hum_student_table_body",
-
-    studentRecordCount: "#hum_student_record_count",
-    studentPagination: "#hum_student_pagination",
-    previousPageButton: "#hum_student_previous_page",
-    nextPageButton: "#hum_student_next_page",
-     smsMainContainer:"#hum_sms_main_layout",
-     
-     studentRegisterTitle:"#hum_student_register_title",
-     studentViewButton: ".hum-student-view-btn",
-     studentEditButton: ".hum-student-edit-btn",
-     studentStatusButton: ".hum-student-status-btn"
-}
-      this.studentDataTable = null;
-
-      this.studentDataTableConfig={
-            processing:true,
-            serverSide:true,
-            length:10,
-
+class HumStudentManagementFiltertable extends HTMLElement {
+    constructor() {
+        super();
+        const template = document.getElementById("hum_student_management_filtertable");
+        this.appendChild(template.content.cloneNode(true));
+        this.selectors = {
+            studentManagementPage: ".hum-student-page",
+            addStudentButton: "#hum_student_add_btn",
+            searchColumn: "#hum_student_search_column",
+            searchInput: "#hum_student_search_input",
+            departmentFilter: "#hum_student_department_filter",
+            genderFilter: "#hum_student_gender_filter",
+            residenceFilter: "#hum_student_residence_filter",
+            statusFilter: "#hum_student_status_filter",
+            lengthFilter: "#hum_student_page_length",
+            studentFormFilter:".form_student_filter",
+            studentTable: "#hum_student_table",
+            studentTableBody: "#hum_student_table_body",
+            studentRecordCount: "#hum_student_record_count",
+            studentPagination: "#hum_student_pagination",
+            previousPageButton: "#hum_student_previous_page",
+            nextPageButton: "#hum_student_next_page",
+            smsMainContainer: "#hum_sms_main_layout",
+            studentRegisterTitle: "#hum_student_register_title",
+            studentViewButton: ".hum-student-view-btn",
+            studentEditButton: ".hum-student-edit-btn",
+            studentStatusButton: ".hum-student-status-btn"
+        };
+        this.studentDataTable = null;
+        this.studentDataTableConfig = {
+            processing: true,
+            serverSide: true,
+            length: 10,
             searching: false,
-
-    dom:
-    't' +
-    '<"row align-items-center mt-2 mb-1 px-2"' +
-        '<"col-md-6 d-flex align-items-center"i>' +
-        '<"col-md-6 d-flex justify-content-md-end hum-custom-pagination"p>' +
-    '>',
-
-            ajax:{
-                url:"https://dev-api.humhealth.com/StudentManagementSystemAPI/student/list",
-                type:"POST",
-                dataType:"json",
-               contentType: "application/json",
-
-                data:(requestData)=>{
-                   return JSON.stringify(
-                    this.studentFormatRequestData(requestData)
-                   );
-                },
-
-
-                dataSrc: (jsonResponse)=>{
-                  return this.displayStudentDataList(jsonResponse);
-                }
-              
+            dom: 't' + '<"row align-items-center mt-2 mb-1 px-2"' + '<"col-md-6 d-flex align-items-center"i>' + '<"col-md-6 d-flex justify-content-md-end hum-custom-pagination"p>' + '>',
+            ajax: {
+                url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/student/list",
+                type: "POST",
+                dataType: "json",
+                contentType: "application/json",
+                data: requestData => JSON.stringify(this.studentFormatRequestData(requestData)),
+                dataSrc: jsonResponse => this.displayStudentDataList(jsonResponse)
             },
-            
-    columns: [
-        {
-            data: "sno",
-            searchable: false,
-            orderable: false,
-            visible: true
-        },
-        {
-            data: "name",
-            searchable: false,
-            orderable: false,
-            visible: true
-        },
-        {
-            data: "branchOfStudy",
-            searchable: false,
-            orderable: false,
-            visible: true
-        },
-        {
-            data: "gender",
-            searchable: false,
-            orderable: false,
-            visible: true
-        },
-        {
-            data: "residingStatusFlag",
-            searchable: false,
-            orderable: false,
-            visible: true
-        },
-        {
-            data: "phoneNumber",
-            searchable: false,
-            orderable: false,
-            visible: true
-        },
-        {
-          data: "email",
-            searchable: false,
-            orderable: false,
-            visible: true
-        },
-        {
-            data: "activeStatusFlag",
-            searchable: false,
-            orderable: false,
-            visible: true
-        },
-        {
-            data: "action",
-            searchable: false,
-            orderable: false,
-            visible: true
-        }
-    ],
-      columnDefs:[
-        
-         { 
-          targets: "_all",
-            className:"text-center"
-         }
-      ]
-      };
-
-    }
-      connectedCallback(){
-        try{
-                this.bindAllRequiredEvents();
-                this.initializeToolTip();
-                this.initializeToastr();
-        this.getStudentList();
-        }
-        catch(error){
-           console.log(error);
-        }
-      
-      }  
-
-      bindAllRequiredEvents(){
-        $(this).on("click",
-            this.selectors.addStudentButton,
-            {classObject: this },
-              this.handlerAddStudentBtn
-        );
-        $(this).on("input",
-          this.selectors.searchInput,
-          {classObject:this},
-          this.handlerStudentSearch
-        );
-        $(this).on("change",
-          this.selectors.searchColumn,
-          {classObject:this},
-          this.handlerStudentSearch
-        );
-
-        $(this).on("change",
-          [
-             this.selectors.departmentFilter,
-             this.selectors.genderFilter,
-             this.selectors.residenceFilter,
-             this.selectors.statusFilter,
-             this.selectors.lengthFilter
-          ].join(","),
-          {classObject:this},
-          this.handlerStudentFilter
-        );
-
-        $(this).on(
-          "click",
-          this.selectors.studentViewButton,
-          { classObject: this },
-          this.handlerViewStudentClick
-   );
-      $(this).on(
-        "click",
-        this.selectors.studentEditButton,
-        {classObject:this},
-        this.handlerEditStudentClick
-      );
-      $(this).on("click",
-        this.selectors.studentStatusButton,
-        {classObject:this},
-        this.handlerStatusStudentClick
-      ) ;
-
-      }
-
-initializeToolTip() {
-    $(this).on("mouseenter", '[data-bs-toggle="tooltip"]', function () {
-        if (!bootstrap.Tooltip.getInstance(this)) {
-            new bootstrap.Tooltip(this, {
-                container: 'body',
-                trigger: 'hover focus'
-            });
-        }
-    });
-}
-disconnectedCallback() {
-
-    // Dispose tooltips attached to dynamically generated buttons
-    $(this).find('[data-bs-toggle="tooltip"]').each(function () {
-
-        const tooltip = bootstrap.Tooltip.getInstance(this);
-
-        if (tooltip) {
-            tooltip.hide();
-            tooltip.dispose();
-        }
-
-        // Remove any remaining tooltip reference
-        const tooltipId = this.getAttribute("aria-describedby");
-
-        if (tooltipId) {
-            document.getElementById(tooltipId)?.remove();
-        }
-
-    });
-
-    // Dispose delegated tooltip instance on custom element
-    const tooltipInstance = bootstrap.Tooltip.getInstance(this);
-
-    if (tooltipInstance) {
-        tooltipInstance.hide();
-        tooltipInstance.dispose();
+            columns: [
+                { data: "sno", searchable: false, orderable: false, visible: true },
+                { data: "name", searchable: false, orderable: false, visible: true },
+                { data: "branchOfStudy", searchable: false, orderable: false, visible: true },
+                { data: "gender", searchable: false, orderable: false, visible: true },
+                { data: "residingStatusFlag", searchable: false, orderable: false, visible: true },
+                { data: "phoneNumber", searchable: false, orderable: false, visible: true },
+                { data: "email", searchable: false, orderable: false, visible: true },
+                { data: "activeStatusFlag", searchable: false, orderable: false, visible: true },
+                { data: "action", searchable: false, orderable: false, visible: true }
+            ],
+            columnDefs: [
+                { targets: "_all", className: "text-center" }
+            ]
+        };  
     }
 
-}
-  
- initializeToastr() {
-    toastr.options = {
-        closeButton: true,
-        progressBar: true,
-        positionClass: "toast-top-center",
-        timeOut: 3000,
-        preventDuplicates: true
-    };
-}
+    connectedCallback() {
+        try {
+            this.bindAllRequiredEvents();
+            this.initializeToolTip();
+            this.initializeToastr();
+            this.getStudentList();
+        }
+        catch (error) {
+            console.log(error);
+        }
+    }
 
-      handlerAddStudentBtn(event){
+    bindAllRequiredEvents() {
+        $(this)
+            .on("click", this.selectors.addStudentButton, { classObject: this }, this.handlerAddStudentBtn)
+            .on("input", this.selectors.searchInput, { classObject: this }, this.handlerStudentSearch)
+            .on("change", this.selectors.searchColumn, { classObject: this }, this.handlerStudentSearch)
+            .on("change", this.selectors.studentFormFilter, { classObject: this }, this.handlerStudentFilter)
+            .on("click", this.selectors.studentViewButton, { classObject: this }, this.handlerViewStudentClick)
+            .on("click", this.selectors.studentEditButton, { classObject: this }, this.handlerEditStudentClick)
+            .on("click", this.selectors.studentStatusButton, { classObject: this }, this.handlerStatusStudentClick);
+    }
+
+    initializeToolTip() {
+        $(this).on("mouseenter", '[data-bs-toggle="tooltip"]', function () {
+            if (!bootstrap.Tooltip.getInstance(this)) {
+                new bootstrap.Tooltip(this, {
+                    container: 'body',
+                    trigger: 'hover focus'
+                });
+            }
+        });
+    }
+
+    disposeAllToolTips() {
+        $(this).find('[data-bs-toggle="tooltip"]').each(function () {
+            const tooltip = bootstrap.Tooltip.getInstance(this);
+            if (tooltip) {
+                tooltip.dispose();
+            }
+            const tooltipId = this.getAttribute("aria-describedby");
+            if (tooltipId) {
+                document.getElementById(tooltipId)?.remove();
+            }
+        });
+    }
+
+    disconnectedCallback() {
+        // Dispose tooltips attached to dynamically generated buttons
+        $(this).find('[data-bs-toggle="tooltip"]').each(function () {
+            const tooltip = bootstrap.Tooltip.getInstance(this);
+            if (tooltip) {
+                tooltip.hide();
+                tooltip.dispose();
+            }
+            // Remove any remaining tooltip reference
+            const tooltipId = this.getAttribute("aria-describedby");
+            if (tooltipId) {
+                document.getElementById(tooltipId)?.remove();
+            }
+        });
+        // Dispose delegated tooltip instance on custom element
+        const tooltipInstance = bootstrap.Tooltip.getInstance(this);
+        if (tooltipInstance) {
+            tooltipInstance.hide();
+            tooltipInstance.dispose();
+        }
+    }
+
+    initializeToastr() {
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: "toast-top-center",
+            timeOut: 3000,
+            preventDuplicates: true
+        };
+    }
+
+    handlerAddStudentBtn(event) {
         event.preventDefault();
         const classObject = event.data.classObject;
-        $(classObject.selectors.smsMainContainer).html("<hum-student-management-register></hum-student-management-register>")
+        $(classObject.selectors.smsMainContainer).html("<hum-student-management-register></hum-student-management-register>");
+    }
 
-      }
-handlerStudentSearch(event) {
-    const classObject = event.data.classObject;
-    const length = Number($(classObject.selectors.lengthFilter).val()) || 10;
-    classObject.studentDataTable.page.len(length).draw(true);
-}
+    handlerStudentSearch(event) {
+        const classObject = event.data.classObject;
+        const length = Number($(classObject.selectors.lengthFilter).val()) || 10;
+        classObject.studentDataTable.page.len(length).draw(true);
+    }
 
     handlerStudentFilter(event) {
-    const classObject = event.data.classObject;
-    const length = Number($(classObject.selectors.lengthFilter).val()) || 10;
-    classObject.studentDataTable.page.len(length).draw(true);
-}
-
-      // View Student Button
-   handlerViewStudentClick(event) {
-    const classObject = event.data.classObject;
-
-     const studentId = $(event.currentTarget).data("student-id");
-
-    $(classObject.selectors.smsMainContainer).html(
-        `<hum-student-management-profile student-id="${studentId}"></hum-student-management-profile>`
-    );
-}
-
-    handlerEditStudentClick(event){
-     const classObject = event.data.classObject;
-
-     const studentId= $(event.currentTarget).data("student-id");
-
-     $(classObject.selectors.smsMainContainer).html(
-      `<hum-student-management-register student-id="${studentId}"></hum-student-management-register>`
-     );
+        const classObject = event.data.classObject;
+        const length = Number($(classObject.selectors.lengthFilter).val()) || 10;
+        classObject.studentDataTable.page.len(length).draw(true);
     }
 
-   handlerStatusStudentClick(event){
-     const classObject = event.data.classObject;
-
-     const studentId= $(event.currentTarget).data("student-id");
-
-      Swal.fire({
-    title: "Are you sure?",
-    text: "Do you want to change the student status?",
-   
-    height: "300px",
-    padding: "1rem",
-    showCancelButton: true,
-    confirmButtonText: "Yes",
-    cancelButtonText: "No",
-    reverseButtons: true,
-    customClass: {
-        popup: "small-swal-popup",
-        title: "small-swal-title",
-        htmlContainer: "small-swal-text",
-        confirmButton: "btn btn-sm btn-primary",
-        cancelButton: "btn btn-sm btn-secondary"
-    },
-    buttonsStyling: false
-}).then((result) => {
-    if (result.isConfirmed) {
-         classObject.studentStatusChange(studentId);
-    }
-});
-
+    // View Student Button
+    handlerViewStudentClick(event) {
+        const classObject = event.data.classObject;
+        const studentId = $(event.currentTarget).data("student-id");
+        $(classObject.selectors.smsMainContainer).html(`<hum-student-management-profile student-id="${studentId}"></hum-student-management-profile>`);
     }
 
-      studentStatusChange(studentId){
-         const classObject=this;
+    handlerEditStudentClick(event) {
+        const classObject = event.data.classObject;
+        const studentId = $(event.currentTarget).data("student-id");
+        $(classObject.selectors.smsMainContainer).html(`<hum-student-management-register student-id="${studentId}"></hum-student-management-register>`);
+    }
 
-         $.ajax({
-           url:"https://dev-api.humhealth.com/StudentManagementSystemAPI/student/activateOrDeactivate/"+studentId,
-           type:"POST",
-           dataType:"json",
-
-           success:function(response){
-             if(response.status === "Success"){
-
-                $(classObject.selectors.smsMainContainer).html(
-            `<hum-student-management-filterTable "></hum-student-management-filterTable>`
-     );
-               
-             } else{
-                  toastr.error(response.data)
-             }
-
-      
-           },
-           
-            error:function(xhr){
-               console.error(xhr.responseText);
+    handlerStatusStudentClick(event) {
+        const classObject = event.data.classObject;
+        const studentId = $(event.currentTarget).data("student-id");
+        Swal.fire({
+            title: "Are you sure?",
+            text: "Do you want to change the student status?",
+            height: "300px",
+            padding: "1rem",
+            showCancelButton: true,
+            confirmButtonText: "Yes",
+            cancelButtonText: "No",
+            reverseButtons: true,
+            customClass: {
+                popup: "small-swal-popup",
+                title: "small-swal-title",
+                htmlContainer: "small-swal-text",
+                confirmButton: "btn btn-sm btn-primary",
+                cancelButton: "btn btn-sm btn-secondary"
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                classObject.studentStatusChange(studentId);
             }
-            
-         })
-      }
+        });
+    }
 
-      studentFormatRequestData(requestData){
-        const classObject =this;
+    studentStatusChange(studentId) {
+        const classObject = this;
+        $.ajax({
+            url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/student/activateOrDeactivate/" + studentId,
+            type: "POST",
+            dataType: "json",
+            success: function (response) {
+                if (response.status === "Success") {
+                    $(classObject.selectors.smsMainContainer).html(`<hum-student-management-filterTable "></hum-student-management-filterTable>`);
+                } else {
+                    toastr.error(response.data);
+                }
+            },
+            error: function (xhr) {
+                console.error(xhr.responseText);
+            }
+        });
+    }
 
-        this.studentFilterRequest ={
-           draw: requestData.draw,
-           length: Number($(classObject.selectors.lengthFilter).val()) || 10,
-           start:requestData.start,
-
-           filter: {
-            gender: $(classObject.selectors.genderFilter).val() || "",
-            residingStatusFlag: $(classObject.selectors.residenceFilter).val() || "",
-            activeFlag:$(classObject.selectors.statusFilter).val() || "A",
-            branchOfStudy: $(classObject.selectors.departmentFilter).val() || ""
-        },
-
-        order:{
-          column:"",
-          type:""
-        },
-
-        search:$(classObject.selectors.searchInput).val()||"",
-        searchColumn:$(classObject.selectors.searchColumn).val()||""
-
+    studentFormatRequestData(requestData) {
+        const classObject = this;
+        this.studentFilterRequest = {
+            draw: requestData.draw,
+            length: Number($(classObject.selectors.lengthFilter).val()) || 10,
+            start: requestData.start,
+            filter: {
+                gender: $(classObject.selectors.genderFilter).val() || "",
+                residingStatusFlag: $(classObject.selectors.residenceFilter).val() || "",
+                activeFlag: $(classObject.selectors.statusFilter).val() || "A",
+                branchOfStudy: $(classObject.selectors.departmentFilter).val() || ""
+            },
+            order: {
+                column: "",
+                type: ""
+            },
+            search: $(classObject.selectors.searchInput).val() || "",
+            searchColumn: $(classObject.selectors.searchColumn).val() || ""
         };
+        return this.studentFilterRequest;
+    }
 
-         return this.studentFilterRequest;
-      }
-
-      displayStudentDataList(response){
-        const studentDataArray =[];
-        if(response.status === "Success"){
-              let index=1;
-           for(const res of response.data){
-              const data={};
+    displayStudentDataList(response) {
+        const studentDataArray = [];
+        if (response.status === "Success") {
+            let index = 1;
+            for (const res of response.data) {
+                const data = {};
                 let branchOfStudy = res.branchOfStudy;
-
-            switch (branchOfStudy) {
-                case "CSCI":
-                    branchOfStudy = "Computer Science";
-                    break;
-
-                case "BIOL":
-                    branchOfStudy = "Biology";
-                    break;
-
-                case "COMM":
-                    branchOfStudy = "Commerce";
-                    break;
-
-                case "ZOOL":
-                    branchOfStudy = "Zoology";
-                    break;
-
-                case "ARTS":
-                    branchOfStudy = "Arts";
-                    break;
-
-                default:
-                    branchOfStudy = "";
-                    break;
+                switch (branchOfStudy) {
+                    case "CSCI":
+                        branchOfStudy = "Computer Science";
+                        break;
+                    case "BIOL":
+                        branchOfStudy = "Biology";
+                        break;
+                    case "COMM":
+                        branchOfStudy = "Commerce";
+                        break;
+                    case "ZOOL":
+                        branchOfStudy = "Zoology";
+                        break;
+                    case "ARTS":
+                        branchOfStudy = "Arts";
+                        break;
+                    default:
+                        branchOfStudy = "";
+                        break;
+                }
+                let residing = res.residingStatusFlag;
+                switch (residing) {
+                    case "D":
+                        residing = "Day Scholar";
+                        break;
+                    case "H":
+                        residing = "Hosteller";
+                        break;
+                    default:
+                        residing = "";
+                        break;
+                }
+                let activeFlag = res.activeStatusFlag;
+                switch (activeFlag) {
+                    case "A":
+                        activeFlag = "Active";
+                        break;
+                    case "I":
+                        activeFlag = "Inactive";
+                        break;
+                    default:
+                        activeFlag = "";
+                        break;
+                }
+                let studentGender = res.gender;
+                switch (studentGender) {
+                    case "MALE":
+                        studentGender = "Male";
+                        break;
+                    case "FEMA":
+                        studentGender = "Female";
+                        break;
+                    default:
+                        studentGender = "";
+                        break;
+                }
+                data["sno"] = index++;
+                data["name"] = [res.firstName, res.middleName, res.lastName].filter(Boolean).join(" ");
+                data["branchOfStudy"] = branchOfStudy;
+                data["gender"] = studentGender;
+                data["residingStatusFlag"] = residing;
+                data["phoneNumber"] = res.phoneNumber;
+                data["email"] = res.mail;
+                data["activeStatusFlag"] = this.forActive(activeFlag);
+                data["action"] = this.forAction(res.studentId, res.activeStatusFlag);
+                studentDataArray.push(data);
             }
-             let residing= res.residingStatusFlag
-             switch(residing){
-               case "D":
-                residing ="Day Scholar";
-                break;
-                case "H":
-                  residing="Hosteller";
-                  break;
-                default:
-                  residing="";
-                  break;
-             }
-
-             let activeFlag= res.activeStatusFlag;
-              switch(activeFlag){
-                case "A":
-                 activeFlag="Active";
-                 break;
-                 case "I":
-                  activeFlag="Inactive";
-                  break;      
-                  default:
-                  activeFlag="";
-                  break;
-              }
-              let studentGender = res.gender;
-
-                   switch(studentGender){
-                case "MALE":
-                 studentGender="Male";
-                 break;
-                 case "FEMA":
-                  studentGender="Female";
-                  break;      
-                  default:
-                  studentGender="";
-                  break;
-              }
-              data["sno"]=index++;
-              data["name"]=[
-                res.firstName,
-                res.middleName,
-                res.lastName
-              ].filter(Boolean).join(" ");
-              
-              data["branchOfStudy"]= branchOfStudy;
-              data["gender"]=studentGender;
-              data["residingStatusFlag"]=residing;
-              data["phoneNumber"] = res.phoneNumber;
-              data["email"]= res.mail;
-              data["activeStatusFlag"]= this.forActive(activeFlag);
-              data["action"] = this.forAction(res.studentId, res.activeStatusFlag);
-              studentDataArray.push(data);
-           }
-            
         }
-         return studentDataArray;
-      }
+        return studentDataArray;
+    }
 
-     
-forAction(studentId, activeStatusFlag) {
-
-    const statusIcon = activeStatusFlag === "A"
-        ? "person_check"
-        : "person_off";
-
-    const statusTitle = activeStatusFlag === "A"
-        ? "Active"
-        : "Inactive";
-    const statusClass = activeStatusFlag ==="A"
-          ?"btn btn-sm btn-outline-success"
-          :"btn btn-sm btn-outline-danger"
-
-    return `
+    forAction(studentId, activeStatusFlag) {
+        const statusIcon = activeStatusFlag === "A" ? "person_check" : "person_off";
+        const statusTitle = activeStatusFlag === "A" ? "Active" : "Inactive";
+        const statusClass = activeStatusFlag === "A" ? "btn btn-sm btn-outline-success" : "btn btn-sm btn-outline-danger";
+        return `
         <button type="button"
             class="btn btn-sm btn-outline-primary hum-student-view-btn"
             data-student-id="${studentId}"
-               data-bs-toggle="tooltip" 
+            data-bs-toggle="tooltip"
             title="View Student">
-            <span class="material-symbols-outlined d-flex text-center hum-icon-font ">visibility</span>
+            <span class="material-symbols-outlined d-flex text-center hum-icon-font">visibility</span>
         </button>
-
         <button type="button"
             class="btn btn-sm btn-outline-secondary hum-student-edit-btn"
             data-student-id="${studentId}"
-               data-bs-toggle="tooltip" 
+            data-bs-toggle="tooltip"
             title="Edit Student">
             <span class="material-symbols-outlined d-flex text-center hum-icon-font">edit</span>
         </button>
-
         <button type="button"
             class="btn btn-sm ${statusClass} hum-student-status-btn"
             data-student-id="${studentId}"
             data-status="${activeStatusFlag}"
-               data-bs-toggle="tooltip" 
+            data-bs-toggle="tooltip"
             title="${statusTitle}">
             <span class="material-symbols-outlined d-flex text-center hum-icon-font">${statusIcon}</span>
         </button>
     `;
-}
-    forActive(activeFlag){
-        if(activeFlag === "Active"){
+    }
+
+    forActive(activeFlag) {
+        if (activeFlag === "Active") {
             return `<span class="student-status-active student-status">Active</span>`;
         }
-
         return `<span class="student-status-inactive student-status">Inactive</span>`;
     }
-  getStudentList(){
-    if(this.studentDataTable){
 
+    getStudentList() {
+        if (this.studentDataTable) {
+        }
+        else {
+            this.studentDataTable = $(this.selectors.studentTable).DataTable(this.studentDataTableConfig);
+        }
     }
-    else{
-       this.studentDataTable=$(this.selectors.studentTable).DataTable(this.studentDataTableConfig);
-    }
-  }
-
 }
-  customElements.define("hum-student-management-filtertable",HumStudentManagementFiltertable);
+customElements.define("hum-student-management-filtertable", HumStudentManagementFiltertable);

@@ -1,5 +1,4 @@
 const SMSDashboardPage = function(){
-    const self = this;
 
     this.selectors={
         smsTemplatesContainer : "#hum_sms_templates_container",
@@ -10,10 +9,11 @@ const SMSDashboardPage = function(){
     }
 
     this.templateFile = "../../../../templates/templates.html";
-    
+    const self = this;
     this.initializeLoadTemplate = function(){
-        $(self.selectors.smsTemplatesContainer).load(self.templateFile, self.loadTemplate);
+        $(this.selectors.smsTemplatesContainer).load(this.templateFile, this.loadTemplate);
     }
+
 
     this.loadTemplate = function(){
         $(self.selectors.smsSideBar).html("<hum-sidebar></hum-sidebar>");
