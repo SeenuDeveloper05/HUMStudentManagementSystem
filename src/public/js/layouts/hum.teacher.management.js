@@ -287,6 +287,9 @@ class HumTeacherManagement extends HTMLElement {
 
     // Converts DataTables pagination and the currently applied teacher filters into the request format required by the Teacher API.
     teacherFormatRequestData(requestData) {
+              const orderByColumnIndex = requestData.order?.[0]?.column ?? 0;
+        const orderByType = requestData.order?.[0]?.dir ?? "asc";
+        const orderByColumn = requestData.columns?.[orderByColumnIndex]?.data ?? "sno";
         return {
             draw: requestData.draw,
             length: this.teacherAppliedFilters.teacherLength,
@@ -296,8 +299,8 @@ class HumTeacherManagement extends HTMLElement {
                     this.teacherAppliedFilters.teacherActiveFlag
             },
             order: {
-                column: "sno",
-                type: "desc"
+                column: orderByColumn,
+                type: orderByType
             },
             search: this.teacherAppliedFilters.search,
             searchColumn: this.teacherAppliedFilters.searchColumn
@@ -506,10 +509,9 @@ class HumTeacherManagement extends HTMLElement {
     displayTeacherDataList(response) {
         const teacherdataArray = [];
         if (response.status === "Success") {
-            let index = 1;
             for (let res of response.data) {
                 const data = {};
-                data["sno"] = index++;
+                data["sno"] = res.sno;
                 data["name"] = res.teacherName;
                 data["speciality"] = res.teacherSpecialty;
                 data["email"] = res.teacherEmail;

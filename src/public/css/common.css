@@ -112,7 +112,7 @@ body {
 
 /* swal */
 .small-swal-popup {
-    width: 250px;
+    width: 280px;
     border-radius: 10px;
 }
 
@@ -284,4 +284,13 @@ body {
 
 .hum-cancel-confirm-actions button:hover {
     opacity: 0.85;
+}
+
+/* Toastr */
+/* Success notification */
+#toast-container > .toast-success {
+    background-color: #198754 !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+    border-radius: 6px;
 }

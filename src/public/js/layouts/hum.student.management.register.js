@@ -1,3 +1,4 @@
+
 class HumStudentManagementRegister extends HTMLElement {
     constructor() {
         super();
@@ -40,6 +41,7 @@ class HumStudentManagementRegister extends HTMLElement {
         };
     }
 
+    // Initializes the Student Registration page by setting up events, form data, popover, notifications, date picker, input masks, and validation.
     connectedCallback() {
         try {
             this.bindAllRequiredEvents();
@@ -54,6 +56,7 @@ class HumStudentManagementRegister extends HTMLElement {
         }
     }
 
+    // Registers event handlers for saving, cancelling, navigating back, and monitoring student registration form inputs.
     bindAllRequiredEvents() {
         $(this)
             .on("click", this.selectors.saveStudentButton, { classObject: this }, this.handlerSaveStudent)
@@ -62,6 +65,7 @@ class HumStudentManagementRegister extends HTMLElement {
             .on("input change", this.selectors.studentRegisterForm + " :input:not([type='hidden'])", { classObject: this }, this.handlerStudentFormInput);
     }
 
+    // Initializes Flatpickr for the student's date of birth with the required date format and manual input support.
     initializeDatePicker() {
         const classObject = this;
         const datepickerConfig = {
@@ -71,6 +75,7 @@ class HumStudentManagementRegister extends HTMLElement {
         $(classObject.selectors.studentDateOfBirth).flatpickr(datepickerConfig);
     }
 
+    // Applies input masks to student and emergency contact phone number fields to maintain a consistent phone number format.
     initializeInputMask() {
         $(this).find(this.selectors.studentPhoneNumber).inputmask("(999)-999-9999", {
             autoUnmask: true
@@ -80,6 +85,7 @@ class HumStudentManagementRegister extends HTMLElement {
         });
     }
 
+    // Configures Toastr notification settings for displaying success and error messages.
     initializeToastr() {
         toastr.options = {
             closeButton: true,
@@ -90,6 +96,7 @@ class HumStudentManagementRegister extends HTMLElement {
         };
     }
 
+    // Creates a reusable cancellation confirmation popover and returns a function to display it with the specified confirmation callback.
     initializePopOver() {
         let activeCancelConfirmation = null;
         const disposeActivePopover = () => {
@@ -146,157 +153,194 @@ class HumStudentManagementRegister extends HTMLElement {
         };
         return showCancelConfirmation;
     }
+    
 
-    initializeStudentValidation() {
-        $(this).find(this.selectors.studentRegisterForm).validate({
-            rules: {
-                FirstName: {
-                    required: true,
-                    minlength: 2,
-                    maxlength: 20,
-                    lettersonly: true
-                },
-                LastName: {
-                    required: true,
-                    minlength: 1,
-                    maxlength: 20,
-                    lettersonly: true
-                },
-                gender: {
-                    required: true
-                },
-                dateOfBirth: {
-                    required: true
-                },
-                branchOfStudy: {
-                    required: true
-                },
-                residingStatusFlag: {
-                    required: true
-                },
-                phoneNumber: {
-                    required: true,
-                    digits: true,
-                    minlength: 5,
-                    maxlength: 15
-                },
-                mail: {
-                    required: true,
-                    validemail: true
-                },
-                emergencyContactPersonName: {
-                    required: true
-                },
-                emergencyContactPhoneNumber: {
-                    required: true,
-                    digits: true,
-                    minlength: 5,
-                    maxlength: 15
-                },
-                addressLine1: {
-                    required: true
-                },
-                state: {
-                    required: true
-                },
-                country: {
-                    required: true
-                },
-                postalCode: {
-                    required: true
-                }
+    // Configures jQuery validation rules and custom error messages for all required student registration fields.
+    // Configures student registration validation and focuses the first invalid field.
+initializeStudentValidation() {
+    $(this).find(this.selectors.studentRegisterForm).validate({
+        focusInvalid: false,
+        rules: {
+            FirstName: {
+                required: true,
+                minlength: 2,
+                maxlength: 20,
+                lettersonly: true
             },
-            messages: {
-                FirstName: {
-                    required: "Please enter first name.",
-                    minlength: "First name must contain at least 2 characters.",
-                    lettersonly: "Please enter letters only"
-                },
-                LastName: {
-                    required: "Please enter last name.",
-                    minlength: "Last name must contain at least 1 characters.",
-                    lettersonly: "Please enter letters only"
-                },
-                gender: {
-                    required: "Please select gender."
-                },
-                dateOfBirth: {
-                    required: "Please select date of birth."
-                },
-                branchOfStudy: {
-                    required: "Please select department."
-                },
-                residingStatusFlag: {
-                    required: "Please select residence."
-                },
-                phoneNumber: {
-                    required: "Please enter phone number.",
-                    digits: "Please enter numbers only.",
-                    minlength: "Phone number must contain 10 digits.",
-                    maxlength: "Phone number must contain only 10 digits."
-                },
-                mail: {
-                    required: "Please enter email address.",
-                    validemail: "Please enter a valid email address."
-                },
-                emergencyContactPersonName: {
-                    required: "Please enter emergency contact person name."
-                },
-                emergencyContactPhoneNumber: {
-                    required: "Please enter emergency contact phone number.",
-                    digits: "Please enter numbers only.",
-                    minlength: "Emergency contact number must contain 10 digits.",
-                    maxlength: "Emergency contact number must contain only 10 digits."
-                },
-                addressLine1: {
-                    required: "Please enter address line 1."
-                },
-                state: {
-                    required: "Please enter state."
-                },
-                country: {
-                    required: "Please enter country."
-                },
-                postalCode: {
-                    required: "Please enter postal code."
-                }
+            LastName: {
+                required: true,
+                minlength: 1,
+                maxlength: 20,
+                lettersonly: true
             },
-            errorPlacement: function (error, element) {
-                error.css("color", "red");
-                if (element.closest(".input-group").length) {
-                    error.insertAfter(element.closest(".input-group"));
-                } else {
-                    error.insertAfter(element);
-                }
+            gender: {
+                required: true
+            },
+            dateOfBirth: {
+                required: true
+            },
+            branchOfStudy: {
+                required: true
+            },
+            residingStatusFlag: {
+                required: true
+            },
+            phoneNumber: {
+                required: true,
+                digits: true,
+                minlength: 5,
+                maxlength: 15
+            },
+            mail: {
+                required: true,
+                validemail: true
+            },
+            emergencyContactPersonName: {
+                required: true
+            },
+            emergencyContactPhoneNumber: {
+                required: true,
+                digits: true,
+                minlength: 5,
+                maxlength: 15
+            },
+            addressLine1: {
+                required: true
+            },
+            state: {
+                required: true
+            },
+            country: {
+                required: true
+            },
+            postalCode: {
+                required: true
             }
-        });
-    }
+        },
+        messages: {
+            FirstName: {
+                required: "Please enter first name.",
+                minlength: "First name must contain at least 2 characters.",
+                lettersonly: "Please enter letters only"
+            },
+            LastName: {
+                required: "Please enter last name.",
+                minlength: "Last name must contain at least 1 characters.",
+                lettersonly: "Please enter letters only"
+            },
+            gender: {
+                required: "Please select gender."
+            },
+            dateOfBirth: {
+                required: "Please select date of birth."
+            },
+            branchOfStudy: {
+                required: "Please select department."
+            },
+            residingStatusFlag: {
+                required: "Please select residence."
+            },
+            phoneNumber: {
+                required: "Please enter phone number.",
+                digits: "Please enter numbers only.",
+                minlength: "Phone number must contain 10 digits.",
+                maxlength: "Phone number must contain only 10 digits."
+            },
+            mail: {
+                required: "Please enter email address.",
+                validemail: "Please enter a valid email address."
+            },
+            emergencyContactPersonName: {
+                required: "Please enter emergency contact person name."
+            },
+            emergencyContactPhoneNumber: {
+                required: "Please enter emergency contact phone number.",
+                digits: "Please enter numbers only.",
+                minlength: "Emergency contact number must contain 10 digits.",
+                maxlength: "Emergency contact number must contain only 10 digits."
+            },
+            addressLine1: {
+                required: "Please enter address line 1."
+            },
+            state: {
+                required: "Please enter state."
+            },
+            country: {
+                required: "Please enter country."
+            },
+            postalCode: {
+                required: "Please enter postal code."
+            }
+        },
+        invalidHandler: function(event, validator) {
+            if (!validator.numberOfInvalids()) {
+                return;
+            }
 
+            const firstInvalidField = $(validator.errorList[0].element);
+            const navbarHeight = $("hum-navbar").outerHeight() || 0;
+            const scrollPosition = firstInvalidField.offset().top - navbarHeight - 20;
+
+            $("html, body").stop().animate({
+                scrollTop: scrollPosition
+            }, 400, function() {
+                firstInvalidField[0].focus({ preventScroll: true });
+            });
+        },
+        errorPlacement: function(error, element) {
+            error.css("color", "red");
+            if (element.closest(".input-group").length) {
+                error.insertAfter(element.closest(".input-group"));
+            } else {
+                error.insertAfter(element);
+            }
+        }
+    });
+}
+    // Enables or disables the Save Student button depending on whether any non-hidden form field contains a value.
     handlerStudentFormInput(event) {
         const classObject = event.data.classObject;
         const form = $(classObject).find(classObject.selectors.studentRegisterForm);
-        const hasValue = form.find(":input:not([type='hidden'])").not(classObject.selectors.studentActiveStatus).toArray().some(element => String($(element).val() || "").trim() !== "");
+        const hasValue = form.find(":input:not([type='hidden'])").not(classObject.selectors.studentActiveStatus).toArray().some(element => String($(element).val()).trim()!=="");
         form.find(classObject.selectors.saveStudentButton).prop("disabled", !hasValue);
     }
 
+    // Navigates back to the Student Management listing page when the Back button is clicked.
     handlerBackStudent(event) {
         event.preventDefault();
         const classObject = event.data.classObject;
         $(classObject.selectors.smsMainContainer).html("<hum-student-management-filtertable></hum-student-management-filtertable>");
     }
 
-    handlerSaveStudent(event) {
-        event.preventDefault();
-        const classObject = event.data.classObject;
-        const studentForm = $(classObject).find(classObject.selectors.studentRegisterForm)[0];
-        if (!$(studentForm).valid()) {
-            return;
+    // Validates the student registration form and initializes the form data before calling the saveStudent method.
+// Validates the registration form and focuses the first invalid field.
+handlerSaveStudent(event) {
+    event.preventDefault();
+    const classObject = event.data.classObject;
+    const studentForm = $(classObject).find(classObject.selectors.studentRegisterForm)[0];
+    const validator = $(studentForm).validate();
+
+    if (!validator.form()) {
+        const firstInvalidField = validator.errorList[0].element;
+
+        if (firstInvalidField) {
+            firstInvalidField.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+            setTimeout(() => {
+                firstInvalidField.focus({ preventScroll: true });
+            }, 500);
         }
-        // const studentId = $(classObject).find(classObject.selectors.studentId).val()
-        classObject.initializeStudentForm();
-        classObject.saveStudent();
+        return;
     }
 
+    classObject.initializeStudentForm();
+    classObject.saveStudent();
+}
+
+    // Collects student registration details and sends them to the Save or Update Student API, then handles the response.
     saveStudent() {
         const classObject = this;
         const studentData = {
@@ -342,6 +386,7 @@ class HumStudentManagementRegister extends HTMLElement {
         });
     }
 
+    // Displays the cancellation confirmation popover and navigates back to the student listing page when confirmed.
     handlerCancelStudent(event) {
         event.preventDefault();
         const classObject = event.data.classObject;
@@ -351,6 +396,7 @@ class HumStudentManagementRegister extends HTMLElement {
         });
     }
 
+    // Checks whether the page is in Add or Edit mode and initializes the appropriate title, button text, and student details.
     // edit student
     initializeStudentForm() {
         const classObject = this;
@@ -366,6 +412,7 @@ class HumStudentManagementRegister extends HTMLElement {
         }
     }
 
+    // Fetches the selected student's details from the Student API and populates the registration form for editing.
     // Logic for Edit student
     getStudentById(studentId) {
         const classObject = this;
@@ -397,7 +444,7 @@ class HumStudentManagementRegister extends HTMLElement {
                     $(classObject).find(classObject.selectors.studentState).val(student.state || "");
                     $(classObject).find(classObject.selectors.studentCountry).val(student.country || "");
                     $(classObject).find(classObject.selectors.studentPostalCode).val(student.postalCode || "");
-                    $(classObject).find(classObject.selectors.saveStudentButton).prop("disabled", false);
+                    $(classObject).find(classObject.selectors.saveStudentButton).prop("disabled", true);
                 } else {
                     toastr.error(response.data);
                 }

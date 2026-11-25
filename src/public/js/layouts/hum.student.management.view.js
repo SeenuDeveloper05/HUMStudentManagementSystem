@@ -1,3 +1,4 @@
+
 class HumStudentManagementProfile extends HTMLElement {
     constructor() {
         super();
@@ -42,6 +43,7 @@ class HumStudentManagementProfile extends HTMLElement {
         };
     }
 
+    // Initializes the Student Profile page and registers the required events before loading student details.
     connectedCallback() {
         try {
             this.bindAllRequiredEvents();
@@ -51,6 +53,7 @@ class HumStudentManagementProfile extends HTMLElement {
         }
     }
 
+    // Registers delegated event handlers for navigation, profile image upload, image preview, and image deletion actions.
     bindAllRequiredEvents() {
         $(this)
             .on("click", this.selectors.backButton, { classObject: this }, this.handlerBackButton)
@@ -61,6 +64,7 @@ class HumStudentManagementProfile extends HTMLElement {
             .on("click", this.selectors.deleteImageBtn, { classObject: this }, this.handlerDeleteStudentClick);
     }
 
+    // Configures Toastr notification settings for displaying success and error messages.
     initializeToastr() {
         toastr.options = {
             closeButton: true,
@@ -71,18 +75,21 @@ class HumStudentManagementProfile extends HTMLElement {
         };
     }
 
+    // Navigates back to the Student Management listing page when the Back button is clicked.
     // Back to Student
     handlerBackButton(event) {
         const classObject = event.data.classObject;
         $(classObject.selectors.smsMainContainer).html("<hum-student-management-filtertable></hum-student-management-filtertable>");
     }
 
+    // Opens the file selection dialog to choose a profile image for the selected student.
     handlerUploadStudentClick(event) {
         event.preventDefault();
         const classObject = event.data.classObject;
         $(classObject).find(classObject.selectors.profileImageInput).trigger("click");
     }
 
+    // Checks the selected profile image file and calls the upload method when a file is available.
     handlerProfileImageChange(event) {
         const classObject = event.data.classObject;
         const imageInput = event.currentTarget;
@@ -92,6 +99,7 @@ class HumStudentManagementProfile extends HTMLElement {
         classObject.uploadStudentProfileImage(imageInput.files[0]);
     }
 
+    // Displays the selected student's profile image in a Bootstrap modal for a larger preview.
     handlerProfileImageView(event) {
         event.preventDefault();
         const classObject = event.data.classObject;
@@ -102,6 +110,7 @@ class HumStudentManagementProfile extends HTMLElement {
         $(classObject).find(classObject.selectors.studentProfileImageOpen).modal("show");
     }
 
+    // Displays a confirmation dialog before deleting the selected student's profile image.
     handlerDeleteStudentClick(event) {
         event.preventDefault();
         const classObject = event.data.classObject;
@@ -130,6 +139,7 @@ class HumStudentManagementProfile extends HTMLElement {
         });
     }
 
+    // Sends a request to the Delete Profile API and removes the student's profile image from the page after successful deletion.
     deleteStudentImage(student) {
         const self = this;
         $.ajax({
@@ -154,6 +164,7 @@ class HumStudentManagementProfile extends HTMLElement {
         });
     }
 
+    // Retrieves the student ID from the component attribute and loads the corresponding student profile when available.
     initializeStudentIdView() {
         const currentStudentId = $(this).attr("student-id");
         if (currentStudentId) {
@@ -161,6 +172,7 @@ class HumStudentManagementProfile extends HTMLElement {
         }
     }
 
+    // Fetches student details from the Student API and passes the response to the profile display method.
     // View Student
     viewStudent(studentId) {
         const SELF = this;
@@ -183,6 +195,7 @@ class HumStudentManagementProfile extends HTMLElement {
         });
     }
 
+    // Formats the student information and updates the profile page with personal, academic, contact, emergency, and address details.
     // View Student
     viewStudentDetails(student) {
         const fullName = [student.firstName, student.middleName, student.lastName].filter(Boolean).join(" ");
@@ -283,6 +296,7 @@ class HumStudentManagementProfile extends HTMLElement {
         $(this).find(this.selectors.postalCode).text(student.postalCode || "-");
     }
 
+    // Retrieves the student's profile image from the Profile API and displays it in the profile avatar.
     getStudentProfile(studentId) {
         const SELF = this;
         $.ajax({
@@ -300,6 +314,7 @@ class HumStudentManagementProfile extends HTMLElement {
         });
     }
 
+    // Converts a Base64 encoded image string into a JPEG Blob URL for displaying the student profile image in the browser.
     changebase64toBlob(base64) {
         const base64Data = base64.split(",")[1] || base64;
         const f = atob(base64Data);
@@ -312,6 +327,7 @@ class HumStudentManagementProfile extends HTMLElement {
         return URL.createObjectURL(ui);
     }
 
+    // Uploads the selected student profile image to the Profile API using FormData and refreshes the profile after successful upload.
     uploadStudentProfileImage(profileImage) {
         const classObject = this;
         const studentId = $(this).attr("student-id");

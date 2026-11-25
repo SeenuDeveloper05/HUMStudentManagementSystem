@@ -1,4 +1,5 @@
 class HumQuarterlyAttendance extends HTMLElement {
+    // Initializes the quarterly attendance component, selectors, filters, and DataTable configuration.
     constructor() {
         super();
         const template = document.getElementById("hum_quarterly_attendance_temp");
@@ -88,7 +89,7 @@ class HumQuarterlyAttendance extends HTMLElement {
                 }
             },
             columns: [
-                {data: "sno",searchable: false,orderable: false,visible: true},
+                {data: "sno",searchable: false,orderable: true,visible: true},
                 {data: "name",searchable: false,orderable: false,visible: true},
                 {data: "branchOfStudy",searchable: false,orderable: false,visible: true},
                 {data: "quarter",searchable: false,orderable: false,visible: true},
@@ -106,6 +107,7 @@ class HumQuarterlyAttendance extends HTMLElement {
         };
     }
 
+    // Initializes the quarterly attendance page and loads its default data.
     connectedCallback() {
         try {
             this.handlerYearOption();
@@ -118,6 +120,7 @@ class HumQuarterlyAttendance extends HTMLElement {
         }
     }
 
+    // Registers event handlers for quarterly attendance actions and filter controls.
     bindAllRequiredEvents() {
         $(this)
             .on("click", this.selectors.viewAction, { classObject: this }, this.handlerViewQuarterlyClick)
@@ -133,6 +136,7 @@ class HumQuarterlyAttendance extends HTMLElement {
             .on("input change", this.selectors.quarterlyFormFilter,{ classObject: this }, this.handlerQuarterlyResetVisibility);
     }
 
+    // Initializes Bootstrap tooltips for quarterly attendance action buttons.
     initializeToolTip() {
         new bootstrap.Tooltip(this, {
             selector: '[data-bs-toggle="tooltip"]',
@@ -141,6 +145,7 @@ class HumQuarterlyAttendance extends HTMLElement {
         });
     }
 
+    // Configures Toastr notification settings for quarterly attendance messages.
     initializeToastr() {
         toastr.options = {
             closeButton: true,
@@ -151,6 +156,7 @@ class HumQuarterlyAttendance extends HTMLElement {
         };
     }
 
+    // Applies the selected quarterly attendance filters and reloads the table.
     handlerApplyQuarterlyFilter(event) {
         const classObject = event.data.classObject;
         const length = Number($(classObject).find(classObject.selectors.filterLength).val()) || 10;
@@ -169,6 +175,7 @@ class HumQuarterlyAttendance extends HTMLElement {
     }
 
     // Reset Quarterly Filters
+    // Resets all quarterly attendance filters to their default values.
     handlerResetQuarterlyFilter(event) {
         const classObject = event.data.classObject;
         $(classObject).find(classObject.selectors.filterQuarter).val("");
@@ -191,14 +198,15 @@ class HumQuarterlyAttendance extends HTMLElement {
           $(classObject).find(classObject.selectors.filterChanges).text("");
     }
 
+    // Displays the reset button when any quarterly attendance filter changes.
     handlerQuarterlyResetVisibility(event) {
         const classObject = event.data.classObject;
-  
+
             $(classObject.selectors.resetFilterButton).removeClass("d-none");
             $(classObject).find(classObject.selectors.filterChanges).text(" Filter conditions changed, Click submit.");
         }
 
-
+    // Handles the View action and opens the selected quarterly attendance details.
     handlerViewQuarterlyClick(event) {
         const classObject = event.data.classObject;
         const quarterlyId = $(event.currentTarget).attr("data-quarterly-id");
@@ -206,6 +214,7 @@ class HumQuarterlyAttendance extends HTMLElement {
         classObject.viewQuarterly(quarterlyId, fullName);
     }
 
+    // Handles the Download action and opens the Excel report confirmation modal.
     handlerDownloadQuarterlyClick(event) {
         const classObject = event.data.classObject;
         const quarterlyId = $(event.currentTarget).attr("data-quarterly-id");
@@ -213,12 +222,14 @@ class HumQuarterlyAttendance extends HTMLElement {
         classObject.downloadQuarterly(quarterlyId, fullName);
     }
 
+    // Handles confirmation and starts downloading the selected quarterly report.
     handlerDownloadQuarterlySubmit(event) {
         const classObject = event.data.classObject;
         const quarterlyId = $(event.currentTarget).attr("data-quarterly-id");
         classObject.downloadQuarterlySubmit(quarterlyId);
     }
 
+    // Handles the Email action and opens the quarterly report email modal.
     handlerMailQuarterlyClick(event) {
         const classObject = event.data.classObject;
         const quarterlyId = $(event.currentTarget).attr("data-quarterly-id");
@@ -226,12 +237,14 @@ class HumQuarterlyAttendance extends HTMLElement {
         classObject.mailQuarterly(quarterlyId, fullName);
     }
 
+    // Handles confirmation and sends the selected quarterly report by email.
     handlerMailQuarterlySubmit(event) {
         const classObject = event.data.classObject;
         const quarterlyId = $(event.currentTarget).attr("data-quarterly-id");
         classObject.mailQuarterlySubmit(quarterlyId);
     }
 
+    // Fetches and displays the selected student's quarterly attendance details.
     viewQuarterly(quarterlyId, fullName) {
         const classObject = this;
         $.ajax({
@@ -298,6 +311,7 @@ class HumQuarterlyAttendance extends HTMLElement {
         });
     }
 
+    // Fetches quarterly details and prepares the Excel download confirmation.
     downloadQuarterly(quarterlyId, fullName) {
         const classObject = this;
         $.ajax({
@@ -320,6 +334,7 @@ class HumQuarterlyAttendance extends HTMLElement {
         });
     }
 
+    // Downloads the quarterly attendance report as an Excel file.
     downloadQuarterlySubmit(quarterlyId) {
         const classObject = this;
         if (!quarterlyId) {
@@ -355,6 +370,7 @@ class HumQuarterlyAttendance extends HTMLElement {
         });
     }
 
+    // Fetches quarterly details and prepares the email confirmation modal.
     mailQuarterly(quarterlyId, fullName) {
         const classObject = this;
         $.ajax({
@@ -400,6 +416,7 @@ class HumQuarterlyAttendance extends HTMLElement {
         });
     }
 
+    // Sends the quarterly attendance report email through the API.
     mailQuarterlySubmit(quarterlyId) {
         const classObject = this;
         if (!quarterlyId) {
@@ -425,31 +442,35 @@ class HumQuarterlyAttendance extends HTMLElement {
         });
     }
 
-    quarterlyAttendanceFormatRequestData(requestData) {
-        this.quarterlyAttendanceFilterRequest = {
-            draw: requestData.draw,
-            length: Number($(this).find(this.selectors.filterLength).val()) || requestData.length || 10,
-            start: requestData.start,
-            attendanceReportFilter: {
-                quarter: this.quarterlyAppliedFilters.quarter,
-                complianceStatusFlag: this.quarterlyAppliedFilters.complianceReportFilter,
-                studentBranchOfStudy: this.quarterlyAppliedFilters.studentBranchOfStudy
-            },
-            order: {
-                column: "",
-                type: ""
-            },
-            search: this.quarterlyAppliedFilters.search,
-            searchColumn: this.quarterlyAppliedFilters.searchColumn
-        };
-        console.log("Quarterly API Request:", this.quarterlyAttendanceFilterRequest);
-        return this.quarterlyAttendanceFilterRequest;
-    }
+    // Builds the quarterly attendance API request using the applied filters.
+quarterlyAttendanceFormatRequestData(requestData) {
+        const orderByColumnIndex = requestData.order?.[0]?.column ?? 0;
+        const orderByType = requestData.order?.[0]?.dir ?? "asc";
+        const orderByColumn = requestData.columns?.[orderByColumnIndex]?.data ?? "sno";
+   console.log(requestData)
+    this.quarterlyAttendanceFilterRequest = {
+        draw: requestData.draw,
+        length: Number($(this).find(this.selectors.filterLength).val()) || requestData.length || 10,
+        start: requestData.start,
+        attendanceReportFilter: {
+            quarter: this.quarterlyAppliedFilters.quarter,
+            complianceStatusFlag: this.quarterlyAppliedFilters.complianceReportFilter,
+            studentBranchOfStudy: this.quarterlyAppliedFilters.studentBranchOfStudy
+        },
+        order: {
+         column: orderByColumn,
+                type: orderByType
+        },
+        search: this.quarterlyAppliedFilters.search,
+        searchColumn: this.quarterlyAppliedFilters.searchColumn
+    };
+    return this.quarterlyAttendanceFilterRequest;
+}
 
+    // Converts the quarterly attendance API response into DataTable rows.
     displayQuarterlyAttendanceList(response) {
         const quarterlyAttendanceDataArray = [];
         if (response.status === "Success") {
-            let index = 1;
             for (let res of response.data) {
                 const data = {};
                 let branchOfStudy = res.studentBranchOfStudy;
@@ -490,7 +511,7 @@ class HumQuarterlyAttendance extends HTMLElement {
                     res.studentMiddleName,
                     res.studentLastName
                 ].filter(Boolean).join(" ");
-                data["sno"] = index++;
+                data["sno"] = res.sno;
                 data["name"] = fullName;
                 data["branchOfStudy"] = branchOfStudy;
                 data["quarter"] = res.quarterAndYear;
@@ -507,6 +528,7 @@ class HumQuarterlyAttendance extends HTMLElement {
         return quarterlyAttendanceDataArray;
     }
 
+    // Generates the View, Download, and Email action buttons for a quarterly record.
     forAction(quarterlyId, fullname) {
         return `
             <button type="button"
@@ -536,6 +558,7 @@ class HumQuarterlyAttendance extends HTMLElement {
         `;
     }
 
+    // Returns the compliance status label based on the supplied status.
     forCompliance(complianceStatusFlag) {
         if (complianceStatusFlag === "Compliant") {
             return `<span class="hum-quarterly-status-compliant hum-quarterly-status">Compliant</span>`;
@@ -543,6 +566,7 @@ class HumQuarterlyAttendance extends HTMLElement {
         return `<span class="hum-quarterly-status-noncompliant  hum-quarterly-status">Not Compliant</span>`;
     }
 
+    // Populates the year filter with the current year and previous years.
     handlerYearOption() {
         const today = new Date();
         let curyear = today.getFullYear();
@@ -554,6 +578,7 @@ class HumQuarterlyAttendance extends HTMLElement {
         $(this.selectors.filterYear).html(options);
     }
 
+    // Initializes or refreshes the quarterly attendance DataTable.
     getQuarterlyAttendanceList() {
         if (this.quarterlyAttendanceDataTable) {
             const length = Number($(this).find(this.selectors.filterLength).val()) || 10;

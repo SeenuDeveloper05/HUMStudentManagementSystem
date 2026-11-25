@@ -1,4 +1,5 @@
 class HumDailyAttendance extends HTMLElement {
+    // Creates the daily attendance component and initializes its selectors, state, and DataTable configuration.
     constructor() {
         super();
         const template = document.getElementById("hum_daily_attendance");
@@ -79,7 +80,7 @@ class HumDailyAttendance extends HTMLElement {
                 });
             },
             columns: [
-                { data: "sno", searchable: false, orderable: false, visible: true },
+                { data: "sno", searchable: false, orderable: true, visible: true },
                 { data: "name", searchable: false, orderable: false, visible: true },
                 { data: "branchOfStudy", searchable: false, orderable: false, visible: true },
                 { data: "attendance", searchable: false, orderable: false, visible: true },
@@ -89,6 +90,7 @@ class HumDailyAttendance extends HTMLElement {
         };
     }
 
+    // Initializes the daily attendance page when the component is connected to the document.
     connectedCallback() {
         try {
             this.bindAllRequiredEvents();
@@ -102,6 +104,7 @@ class HumDailyAttendance extends HTMLElement {
         }
     }
 
+    // Registers event handlers for attendance filters, status controls, tabs, and save actions.
     bindAllRequiredEvents() {
         $(this)
             .on("input", this.selectors.studentSearch, { classObject: this }, this.handlerAttendanceStudentSearch)
@@ -114,12 +117,14 @@ class HumDailyAttendance extends HTMLElement {
             .on("click", this.selectors.attendanceTabButton, { classObject: this }, this.handlerAttendanceTabClick);
     }
 
+    // Loads the attendance history and analysis custom elements into their containers.
     initializetemplate() {
         const classObject = this;
         $(classObject.selectors.attendanceHistoryContainer).html("<hum-attendance-history-temp></hum-attendance-history-temp>");
         $(classObject.selectors.attendanceAnalysisContainer).html("<hum-attendance-analysis-temp></hum-attendance-analysis-temp>");
     }
 
+    // Configures Toastr notification settings for attendance messages.
     initializeToastr() {
         toastr.options = {
             closeButton: true,
@@ -131,6 +136,7 @@ class HumDailyAttendance extends HTMLElement {
     }
 
     // Date picker: today by default, future dates are disabled
+    // Initializes the attendance date picker with today's date and disables future dates.
     initializeDatePicker() {
         const classObject = this;
         const datepickerConfig = {
@@ -142,6 +148,7 @@ class HumDailyAttendance extends HTMLElement {
         $(classObject.selectors.attendanceDate).flatpickr(datepickerConfig);
     }
 
+    // Checks whether attendance records already exist for the selected date and branch.
     checkAttendance(event) {
         const classObject = this;
         return new Promise((resolve, reject) => {
@@ -190,6 +197,7 @@ class HumDailyAttendance extends HTMLElement {
     }
 
     // Save Attendance is shown only in the Daily Attendance tab
+    // Handles attendance tab navigation and refreshes the history list when its tab is opened.
     handlerAttendanceTabClick(event) {
         const classObject = event.data.classObject;
         const tabId = $(event.currentTarget).attr("id");
@@ -203,6 +211,7 @@ class HumDailyAttendance extends HTMLElement {
         }
     }
 
+    // Applies the student search and selected page length to the attendance table.
     handlerAttendanceStudentSearch(event) {
         const classObject = event.data.classObject;
         const length = Number($(classObject.selectors.lengthFilter).val()) || 20;
@@ -210,12 +219,14 @@ class HumDailyAttendance extends HTMLElement {
     }
 
     // Page length dropdown change
+    // Updates the attendance table when the page length selection changes.
     handlerAttendanceLengthChange(event) {
         const classObject = event.data.classObject;
         const length = Number($(event.currentTarget).val()) || 20;
         classObject.attendanceDataTable.page.len(length).draw(true);
     }
 
+    // Applies the selected department filter and controls attendance table visibility.
     handlerAttendanceStudentFilter(event) {
         const classObject = event.data.classObject;
         const selectAttendance = $(classObject).find(classObject.selectors.attendanceBranch).val() || "";
@@ -232,6 +243,7 @@ class HumDailyAttendance extends HTMLElement {
     }
 
     // Present / Absent button
+    // Updates a student's attendance status and resets leave selections when marked present.
     handlerAttendanceStatusClick(event) {
         const classObject = event.data.classObject;
         const studentId = $(event.currentTarget).data("student-id");
@@ -250,6 +262,7 @@ class HumDailyAttendance extends HTMLElement {
     }
 
     // Sick Leave / ECA Leave checkbox (only one can be selected at a time)
+    // Updates the selected leave type while ensuring only one leave option is selected.
     handlerAttendanceLeaveChange(event) {
         const classObject = event.data.classObject;
         const studentId = $(event.currentTarget).data("student-id");
@@ -273,6 +286,7 @@ class HumDailyAttendance extends HTMLElement {
         classObject.updateAttendanceRow($(event.currentTarget).closest("tr"), record);
     }
 
+    // Converts the attendance date from the displayed format to the API format.
     ChangeDateFormat(dateString) {
         if (!dateString) {
             return "";
@@ -282,6 +296,7 @@ class HumDailyAttendance extends HTMLElement {
     }
 
     // Save Attendance button
+    // Validates the attendance date and department before submitting attendance records.
     handlerAttendanceSave(event) {
         event.preventDefault();
         const classObject = event.data.classObject;
@@ -304,6 +319,7 @@ class HumDailyAttendance extends HTMLElement {
         classObject.saveAttendance(attendanceRequest);
     }
 
+    // Builds the attendance save request for students in the selected department.
     attendanceFormatSaveRequestData(branch, attendanceDate) {
         const classObject = this;
         const attendanceDataRequest = [];
@@ -328,6 +344,7 @@ class HumDailyAttendance extends HTMLElement {
         return attendanceDataRequest;
     }
 
+    // Sends attendance records to the API and displays the save result.
     saveAttendance(attendanceRequest) {
         const classObject = this;
         $.ajax({
@@ -359,6 +376,7 @@ class HumDailyAttendance extends HTMLElement {
     }
 
     // Refresh one row (button highlight, checkbox enable/disable and checked state)
+    // Refreshes an attendance row's status buttons and leave checkbox states.
     updateAttendanceRow(row, record) {
         const classObject = this;
         const isPresent = record.attendanceStatusFlag === "P";
@@ -372,7 +390,11 @@ class HumDailyAttendance extends HTMLElement {
             .prop("disabled", isPresent);
     }
 
+    // Builds the student list request using the selected filters and search values.
     attendanceStudentFormatRequestData(requestData) {
+              const orderByColumnIndex = requestData.order?.[0]?.column ?? 0;
+        const orderByType = requestData.order?.[0]?.dir ?? "asc";
+        const orderByColumn = requestData.columns?.[orderByColumnIndex]?.data ?? "sno";
         return {
             draw: requestData.draw,
             // Send the selected dropdown value to the API
@@ -385,14 +407,15 @@ class HumDailyAttendance extends HTMLElement {
                 branchOfStudy: $(this.selectors.attendanceBranch).val() || ""
             },
             order: {
-                column: "name",
-                type: "asc"
+                column: orderByColumn,
+                type: orderByType
             },
             search: $(this.selectors.studentSearch).val() || "",
             searchColumn: $(this.selectors.studentColumn).val() || ""
         };
     }
 
+    // Processes the student API response and checks whether attendance can be displayed.
     displayAttendanceStudentDataList(response) {
         if (response.status === "Success") {
             return this.checkAttendance().then((res) => {
@@ -407,6 +430,7 @@ class HumDailyAttendance extends HTMLElement {
         }
     }
 
+    // Converts student records into attendance table rows and stores their selections.
     verifiedAttendancelist(response) {
         const studentDataArray = [];
         for (const res of response.data) {
@@ -455,6 +479,7 @@ class HumDailyAttendance extends HTMLElement {
         return studentDataArray;
     }
 
+    // Generates the Present and Absent buttons for an attendance table row.
     forAttendanceStatus(record) {
         const presentClass = record.attendanceStatusFlag === "P" ? "is-present" : "";
         const absentClass = record.attendanceStatusFlag === "A" ? "is-absent" : "";
@@ -477,6 +502,7 @@ class HumDailyAttendance extends HTMLElement {
     }
 
     // Checkbox is disabled while the student is Present
+    // Generates the leave approval checkbox for a student attendance row.
     forLeaveCheckbox(record, leaveType) {
         const isPresent = record.attendanceStatusFlag === "P";
         const flag = leaveType === "sick" ? record.approvedSickLeaveFlag : record.extraCurricularActivitiesFlag;
@@ -493,6 +519,7 @@ class HumDailyAttendance extends HTMLElement {
         `;
     }
 
+    // Initializes the attendance DataTable when it has not already been created.
     getAttendanceList() {
         if (!this.attendanceDataTable) {
             this.attendanceDataTable = $(this).find(this.selectors.attendanceTable).DataTable(this.attendanceDataTableConfig);
@@ -502,6 +529,7 @@ class HumDailyAttendance extends HTMLElement {
 }
 
 class HumAttendanceHistory extends HTMLElement {
+    // Creates the attendance history component and initializes its selectors and DataTable configuration.
     constructor() {
         super();
         const template = document.getElementById("hum_attendance_history_temp");
@@ -535,7 +563,8 @@ class HumAttendanceHistory extends HTMLElement {
                 dataSrc: jsonResponse => this.displayAttendanceHistoryDataList(jsonResponse)
             },
             columns: [
-                { data: "date", searchable: false, orderable: false, visible: true },
+                { data: "sno", searchable: false, orderable: true, visible: true },
+                { data: "date", searchable: false, orderable: true, visible: true },
                 { data: "name", searchable: false, orderable: false, visible: true },
                 { data: "branchOfStudy", searchable: false, orderable: false, visible: true },
                 { data: "status", searchable: false, orderable: false, visible: true },
@@ -545,6 +574,7 @@ class HumAttendanceHistory extends HTMLElement {
         };
     }
 
+    // Initializes the attendance history page and loads its filters and records.
     connectedCallback() {
         try {
             this.bindAllRequiredEvents();
@@ -558,12 +588,14 @@ class HumAttendanceHistory extends HTMLElement {
         }
     }
 
+    // Registers event handlers for attendance history filters and page length changes.
     bindAllRequiredEvents() {
         $(this)
             .on("change", this.selectors.formFilter, { classObject: this }, this.handlerAttendanceHistoryFilter)
             .on("change", this.selectors.historyLength, { classObject: this }, this.handlerAttendanceHistoryLengthChange);
     }
 
+    // Initializes the date picker used to filter attendance history.
     initializeDatePicker() {
         const classObject = this;
         const datepickerConfig = {
@@ -576,6 +608,7 @@ class HumAttendanceHistory extends HTMLElement {
     }
 
     // Month starts on "All months"; year dropdown: current year and the previous 4 years
+    // Populates the attendance history month and year filter options.
     initializeYearOptions() {
         const classObject = this;
         const currentYear = new Date().getFullYear();
@@ -590,6 +623,7 @@ class HumAttendanceHistory extends HTMLElement {
     }
 
     // Existing filters
+    // Applies the selected attendance history filters and page length to the table.
     handlerAttendanceHistoryFilter(event) {
         const classObject = event.data.classObject;
         const length = Number($(classObject.selectors.historyLength).val()) || 20;
@@ -597,6 +631,7 @@ class HumAttendanceHistory extends HTMLElement {
     }
 
     // Page length dropdown change
+    // Updates the attendance history table when the page length selection changes.
     handlerAttendanceHistoryLengthChange(event) {
         const classObject = event.data.classObject;
         const length = Number($(event.currentTarget).val()) || 20;
@@ -604,6 +639,7 @@ class HumAttendanceHistory extends HTMLElement {
     }
 
     // Called by the Daily Attendance page every time the History tab is opened
+    // Refreshes the attendance history table when the History tab is opened.
     reloadAttendanceHistoryList() {
         if (this.attendanceHistoryDataTable) {
             const length = Number($(this.selectors.historyLength).val()) || 20;
@@ -611,8 +647,12 @@ class HumAttendanceHistory extends HTMLElement {
         }
     }
 
+    // Builds the attendance history API request using the selected filters.
     attendanceHistoryFormatRequestData(requestData) {
         const classObject = this;
+              const orderByColumnIndex = requestData.order?.[0]?.column ?? 0;
+        const orderByType = requestData.order?.[0]?.dir ?? "asc";
+        const orderByColumn = requestData.columns?.[orderByColumnIndex]?.data ?? "AttendanceDate";
         const month = $(classObject.selectors.historyMonth).val() || "";
         const year = $(classObject.selectors.historyYear).val() || "";
         const date = $(classObject.selectors.historyDate).val() || null;
@@ -636,8 +676,8 @@ class HumAttendanceHistory extends HTMLElement {
                 activitieStatusFlag: $(classObject.selectors.historyEcaLeave).val() || ""
             },
             order: {
-                column: "sno",
-                type: "desc"
+        column: orderByColumn,
+                type: orderByType
             },
             search: "",
             searchColumn: "",
@@ -647,6 +687,7 @@ class HumAttendanceHistory extends HTMLElement {
         return this.attendanceHistoryFilterRequest;
     }
 
+    // Converts the attendance history API response into table row data.
     displayAttendanceHistoryDataList(response) {
         const attendanceHistoryArray = [];
         if (response.status === "Success") {
@@ -673,6 +714,7 @@ class HumAttendanceHistory extends HTMLElement {
                         branchOfStudy = "";
                         break;
                 }
+                data["sno"] =res.sno;
                 data["date"] = res.attendanceDate;
                 data["name"] = [res.studentFirstName, res.studentLastName].filter(Boolean).join(" ");
                 data["branchOfStudy"] = branchOfStudy;
@@ -685,6 +727,7 @@ class HumAttendanceHistory extends HTMLElement {
         return attendanceHistoryArray;
     }
 
+    // Converts the attendance history date from the displayed format to the API format.
     ChangeDateFormat(dateString) {
         if (!dateString) {
             return "";
@@ -693,6 +736,7 @@ class HumAttendanceHistory extends HTMLElement {
         return dateParts[1] + "-" + dateParts[0] + "-" + dateParts[2];
     }
 
+    // Returns the attendance status label based on the attendance status flag.
     forAttendanceStatus(attendanceStatusFlag) {
         if (attendanceStatusFlag === "P") {
             return `<span class="hum-attendance-history-status hum-attendance-history-status-present">Present</span>`;
@@ -701,6 +745,7 @@ class HumAttendanceHistory extends HTMLElement {
     }
 
     // "Approved" only when the leave flag is Y, otherwise a dash
+    // Displays the leave approval status based on the supplied leave flag.
     forLeaveApproved(leaveFlag, leaveType) {
         if (leaveFlag !== "Y") {
             return `<span class="hum-attendance-history-dash">-</span>`;
@@ -709,6 +754,7 @@ class HumAttendanceHistory extends HTMLElement {
         return `<span class="hum-attendance-history-approved ${ecaClass}">Approved</span>`;
     }
 
+    // Initializes the attendance history DataTable when it has not already been created.
     getAttendanceHistoryList() {
         if (!this.attendanceHistoryDataTable) {
             this.attendanceHistoryDataTable = $(this).find(this.selectors.historyTable).DataTable(this.attendanceHistoryDataTableConfig);
@@ -717,6 +763,7 @@ class HumAttendanceHistory extends HTMLElement {
 }
 
 class HumAttendanceAnalysis extends HTMLElement {
+    // Creates the attendance analysis component and initializes its selectors and DataTable configuration.
     constructor() {
         super();
         const template = document.getElementById("hum_attendance_analysis_temp");
@@ -755,7 +802,7 @@ class HumAttendanceAnalysis extends HTMLElement {
                 dataSrc: jsonResponse => this.displayAttendanceAnalysisDataList(jsonResponse)
             },
             columns: [
-                { data: "sno", searchable: false, orderable: false, visible: true },
+                { data: "sno", searchable: false, orderable: true, visible: true },
                 { data: "name", searchable: false, orderable: false, visible: true },
                 { data: "branchOfStudy", searchable: false, orderable: false, visible: true },
                 { data: "totalWorkingDays", searchable: false, orderable: false, visible: true },
@@ -768,6 +815,7 @@ class HumAttendanceAnalysis extends HTMLElement {
         };
     }
 
+    // Initializes the attendance analysis page, filters, tooltip, and table.
     connectedCallback() {
         try {
             this.bindAllRequiredEvents();
@@ -780,6 +828,7 @@ class HumAttendanceAnalysis extends HTMLElement {
         }
     }
 
+    // Registers event handlers for attendance analysis filters, dates, and page length.
     bindAllRequiredEvents() {
         $(this)
             .on("change", this.selectors.formFilterChange, { classObject: this }, this.handlerAttendanceAnalysisFilter)
@@ -788,6 +837,7 @@ class HumAttendanceAnalysis extends HTMLElement {
             .on("click", this.selectors.attendanceAnalysisDatesButton, { classObject: this }, this.handlerAttendanceAnalysisDatesClick);
     }
 
+    // Initializes Bootstrap tooltips for the attendance analysis component.
     initializeToolTip() {
         new bootstrap.Tooltip(this, {
             selector: '[data-bs-toggle="tooltip"]',
@@ -796,6 +846,7 @@ class HumAttendanceAnalysis extends HTMLElement {
         });
     }
 
+    // Populates the attendance analysis year dropdown options.
     handlerYearOption() {
         const self = this;
         const today = new Date();
@@ -809,6 +860,7 @@ class HumAttendanceAnalysis extends HTMLElement {
     }
 
     // Month and year start on the current month and year
+    // Sets the current month and year as the default attendance analysis filters.
     initializeCurrentMonthYear() {
         const classObject = this;
         const today = new Date();
@@ -818,6 +870,7 @@ class HumAttendanceAnalysis extends HTMLElement {
         $(classObject.selectors.attendanceAnalysisYear).val(today.getFullYear());
     }
 
+    // Applies the selected attendance analysis filters and page length to the table.
     handlerAttendanceAnalysisFilter(event) {
         const classObject = event.data.classObject;
         const length = Number($(classObject.selectors.attendanceLength).val()) || 20;
@@ -825,6 +878,7 @@ class HumAttendanceAnalysis extends HTMLElement {
     }
 
     // Page length dropdown change
+    // Updates the attendance analysis table when the page length selection changes.
     handlerAttendanceAnalysisLengthChange(event) {
         const classObject = event.data.classObject;
         const length = Number($(event.currentTarget).val()) || 20;
@@ -832,6 +886,7 @@ class HumAttendanceAnalysis extends HTMLElement {
     }
 
     // View Dates button: absent dates of that student, or a full attendance message
+    // Displays the selected student's absent dates or full attendance message.
     handlerAttendanceAnalysisDatesClick(event) {
         const classObject = event.data.classObject;
         const studentId = $(event.currentTarget).data("student-id");
@@ -867,6 +922,7 @@ class HumAttendanceAnalysis extends HTMLElement {
     }
 
     // Called by the Daily Attendance page every time the Analysis tab is opened
+    // Refreshes the attendance analysis table when the Analysis tab is opened.
     reloadAttendanceAnalysisList() {
         if (this.attendanceAnalysisDataTable) {
             const length = Number($(this.selectors.attendanceLength).val()) || 20;
@@ -874,8 +930,12 @@ class HumAttendanceAnalysis extends HTMLElement {
         }
     }
 
+    // Builds the attendance analysis API request using the selected filters.
     attendanceAnalysisFormatRequestData(requestData) {
         const classObject = this;
+              const orderByColumnIndex = requestData.order?.[0]?.column ?? 0;
+        const orderByType = requestData.order?.[0]?.dir ?? "asc";
+        const orderByColumn = requestData.columns?.[orderByColumnIndex]?.data ?? "sno";
         const month = $(classObject.selectors.attendanceAnalysisMonth).val() || "";
         const year = $(classObject.selectors.attendanceAnalysisYear).val() || "";
         const ecaCount = $(classObject.selectors.attendanceAnalysisEcaCount).val();
@@ -899,8 +959,8 @@ class HumAttendanceAnalysis extends HTMLElement {
                 absenteeismPercentage: null
             },
             order: {
-                column: "",
-                type: ""
+            column: orderByColumn,
+                type: orderByType
             },
             search: "",
             searchColumn: "",
@@ -910,6 +970,7 @@ class HumAttendanceAnalysis extends HTMLElement {
         return this.attendanceAnalysisFilterRequest;
     }
 
+    // Converts the attendance analysis API response into table rows and stores absent dates.
     displayAttendanceAnalysisDataList(response) {
         const attendanceAnalysisArray = [];
         // A new list replaces the loaded students
@@ -961,6 +1022,7 @@ class HumAttendanceAnalysis extends HTMLElement {
     }
 
     // View Dates button for every student
+    // Generates the View Dates button for a student's attendance analysis row.
     forAbsentDates(studentId) {
         return `
             <button type="button"
@@ -976,6 +1038,7 @@ class HumAttendanceAnalysis extends HTMLElement {
         `;
     }
 
+    // Initializes the attendance analysis DataTable when it has not already been created.
     getAttendanceAnalysisList() {
         if (!this.attendanceAnalysisDataTable) {
             this.attendanceAnalysisDataTable = $(this).find(this.selectors.attendanceAnalysisTable).DataTable(this.attendanceAnalysisDataTableConfig);

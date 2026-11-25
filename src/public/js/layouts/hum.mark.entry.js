@@ -1,4 +1,5 @@
 class HumMarkEntry extends HTMLElement {
+    // Initializes the Mark Entry component, selectors, and DataTable configuration.
     constructor() {
         super();
         const template = document.getElementById("hum_mark_entry_temp");
@@ -182,7 +183,7 @@ class HumMarkEntry extends HTMLElement {
                     });
             },
             columns: [
-                { data: "sno", searchable: false, orderable: false, visible: true },
+                { data: "sno", searchable: false, orderable: true, visible: true },
                 { data: "name", searchable: false, orderable: false, visible: true },
                 { data: "branchOfStudy", searchable: false, orderable: false, visible: true },
                 { data: "quarter", searchable: false, orderable: false, visible: true },
@@ -213,6 +214,8 @@ class HumMarkEntry extends HTMLElement {
             },
         };
     }
+
+    // Initializes the Mark Entry page and loads the required data.
     connectedCallback() {
         try {
             this.handlerYearOption();
@@ -224,6 +227,8 @@ class HumMarkEntry extends HTMLElement {
             console.error(error);
         }
     }
+
+    // Registers event handlers for Mark Entry actions and filters.
     bindAllRequiredEvents() {
         $(this)
             .on("click", this.selectors.applyFilterButton, { classObject: this }, this.handlerApplyMarkFilter)
@@ -243,9 +248,12 @@ class HumMarkEntry extends HTMLElement {
             .on("input change", this.selectors.markFilterChanges, { classObject: this }, this.handlerMarkResetVisibility)
     }
 
+    // Marks the table row when a subject mark is changed.
     markChanged(event) {
         $(this).closest("tr").addClass("mark-changed")
     }
+
+    // Applies the selected Mark Entry filters and refreshes the table.
     handlerApplyMarkFilter(event) {
         const classObject = event.data.classObject;
         Number($(classObject).find(classObject.selectors.filterLength).val()) || 10;
@@ -258,6 +266,8 @@ class HumMarkEntry extends HTMLElement {
         Number($(classObject).find(classObject.selectors.filterValue).val().trim());
         classObject.getMarkEntryList();
     }
+
+    // Resets all Mark Entry filters to their default values.
     handlerResetMarkFilter(event) {
         const classObject = event.data.classObject;
         $(classObject).find(classObject.selectors.filterLength).val(10);
@@ -275,13 +285,18 @@ class HumMarkEntry extends HTMLElement {
         $(classObject).find(classObject.selectors.filterChanges).text("");
     }
 
+    // Displays the reset button when Mark Entry filter values change.
     handlerMarkResetVisibility(event) {
         const classObject = event.data.classObject;
         $(classObject).find(classObject.selectors.resetFilterButton).removeClass("d-none");
         $(classObject).find(classObject.selectors.filterChanges).text(" Filter conditions changed, Click submit.");
     }
 
+    // Retrieves the student list required for Mark Entry.
     getStudentListForMarkEntry(requestData) {
+              const orderByColumnIndex = requestData.order?.[0]?.column ?? 0;
+        const orderByType = requestData.order?.[0]?.dir ?? "asc";
+        const orderByColumn = requestData.columns?.[orderByColumnIndex]?.data ?? "sno";
         const studentRequest = {
             draw: requestData.draw,
             length: Number($(this).find(this.selectors.filterLength).val()) || requestData.length || 10,
@@ -293,8 +308,8 @@ class HumMarkEntry extends HTMLElement {
                 branchOfStudy: $(this).find(this.selectors.filterBranch).val() || ""
             },
             order: {
-                column: "",
-                type: ""
+                  column: orderByColumn,
+                type: orderByType
             },
             search: $(this).find(this.selectors.filterSearch).val() || "",
             searchColumn: "Fullname" || ""
@@ -307,6 +322,8 @@ class HumMarkEntry extends HTMLElement {
             data: JSON.stringify(studentRequest)
         });
     }
+
+    // Retrieves the mark list using the current table request parameters.
     getMarkListForMarkEntry(requestData) {
         const markRequest = this.markEntryFormatRequestData(requestData);
         markRequest.length = Number($(this).find(this.selectors.filterLength).val()) || requestData.length || 10;
@@ -318,6 +335,8 @@ class HumMarkEntry extends HTMLElement {
             data: JSON.stringify(markRequest)
         });
     }
+
+    // Determines the current quarter and year.
     getCurrentMarkQuarter() {
         const currentDate = new Date();
         const currentMonth = currentDate.getMonth() + 1;
@@ -326,6 +345,7 @@ class HumMarkEntry extends HTMLElement {
         return quarter + "-" + currentYear;
     }
 
+    // Enables mark editing for the selected table rows.
     handlerTableInputMarkEdit(event) {
         const classObject = event.data.classObject;
         const tableRows = $(classObject).find("#hum_mark_table_body > tr");
@@ -349,6 +369,7 @@ class HumMarkEntry extends HTMLElement {
         $(classObject).find(classObject.selectors.tableCancelButton).removeClass("d-none");
     }
 
+    // Validates and saves the modified marks for the selected table rows.
     handlerSaveTableMarkEdit(event) {
         const classObject = event.data.classObject;
         const tableRows = $(classObject).find(classObject.selectors.markTableBody).find("tr.mark-changed");
@@ -424,6 +445,7 @@ class HumMarkEntry extends HTMLElement {
         });
     }
 
+    // Opens the confirmation popover before cancelling mark editing.
     handlerCancelTableMarkEdit(event) {
         event.preventDefault();
         const classObject = event.data.classObject;
@@ -433,6 +455,7 @@ class HumMarkEntry extends HTMLElement {
         });
     }
 
+    // Restores the original marks and exits table editing mode.
     cancelTableMarkEdit() {
         const classObject = this;
         const tableRows = $(classObject).find(classObject.selectors.markTableBody).find("tr");
@@ -455,6 +478,7 @@ class HumMarkEntry extends HTMLElement {
         toastr.info("Mark editing cancelled.");
     }
 
+    // Retrieves the student list and populates the bulk mark entry dropdown.
     handlerGetBulkStudentList() {
         $.ajax({
             url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/student/list",
@@ -505,6 +529,7 @@ class HumMarkEntry extends HTMLElement {
         });
     }
 
+    // Retrieves mark details for the specified mark ID.
     handlerGetMarkDetails(markId) {
         $.ajax({
             url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/mark/" + markId,
@@ -525,6 +550,7 @@ class HumMarkEntry extends HTMLElement {
         });
     }
 
+    // Opens the mark details modal for the selected student record.
     handlerViewMark(event) {
         const classObject = event.data.classObject;
         // Get Mark ID from button attribute
@@ -553,6 +579,7 @@ class HumMarkEntry extends HTMLElement {
         classObject.handlerGetViewMarkDetails(markId);
     }
 
+    // Fetches the selected student's mark details for the View modal.
     handlerGetViewMarkDetails(markId) {
         const classObject = this;
         $.ajax({
@@ -573,6 +600,7 @@ class HumMarkEntry extends HTMLElement {
         });
     }
 
+    // Displays the selected student's mark details in the View modal.
     handlerDisplayViewMarkDetails(mark) {
         // Student Full Name
         const fullName = [
@@ -636,6 +664,7 @@ class HumMarkEntry extends HTMLElement {
         $(this.selectors.detailsResult).html(this.forResult(mark.result) || "-");
     }
 
+    // Confirms and initiates the download of a mark report by Mark ID.
     handlerDownloadMarkId(event) {
         const classObject = event.data.classObject;
         const markId = $(event.currentTarget).attr("data-mark-id");
@@ -663,6 +692,7 @@ class HumMarkEntry extends HTMLElement {
         });
     }
 
+    // Downloads the Excel mark report for the specified Mark ID.
     downloadMarkReport(markId) {
         if (!markId) {
             toastr.error("Mark ID is missing");
@@ -696,6 +726,7 @@ class HumMarkEntry extends HTMLElement {
         });
     }
 
+    // Opens the email report modal with the selected student's information.
     handlerOpenEmailMarkModal(event) {
         const classObject = event.data.classObject;
         const markId = $(event.currentTarget).attr("data-mark-id");
@@ -718,6 +749,7 @@ class HumMarkEntry extends HTMLElement {
         $(classObject).find(classObject.selectors.emailModal).modal("show");
     }
 
+    // Sends the selected student's mark report through email.
     handlerSendMarkReportEmail(event) {
         const classObject = event.data.classObject;
         const markId = classObject.emailMarkId;
@@ -745,6 +777,7 @@ class HumMarkEntry extends HTMLElement {
         });
     }
 
+    // Confirms and initiates the download of a student's quarterly marks report.
     handlerDownloadStudentMarkReport(event) {
         const classObject = event.data.classObject;
         const studentId = $(event.currentTarget).attr("data-student-id");
@@ -772,6 +805,8 @@ class HumMarkEntry extends HTMLElement {
             }
         });
     }
+
+    // Downloads the selected student's marks report as a PDF file.
     downloadStudentMarkReport(studentId, quarter) {
         if (!studentId || !quarter) {
             toastr.error("Student ID or Quarter is missing");
@@ -804,6 +839,7 @@ class HumMarkEntry extends HTMLElement {
         });
     }
 
+    // Retrieves and displays the topper details for the selected quarter and branch.
     handlerGetQuarterTopper(event) {
         const classObject = event.data.classObject;
         $(classObject).find(classObject.selectors.topperModal).modal("show");
@@ -846,6 +882,7 @@ class HumMarkEntry extends HTMLElement {
         });
     }
 
+    // Displays the topper's profile, branch, marks, and result information.
     handlerDisplayQuarterTopper(data) {
         const fullName = [
             data.studentFirstName,
@@ -905,6 +942,7 @@ class HumMarkEntry extends HTMLElement {
         $(this).find(this.selectors.topperResult).removeClass("d-none").addClass("d-block");
     }
 
+    // Displays a message when topper details are unavailable.
     handlerDisplayTopperMessage(message) {
         // Hide topper details
         $(this).find(this.selectors.topperResult).removeClass("d-block").addClass("d-none");
@@ -912,15 +950,17 @@ class HumMarkEntry extends HTMLElement {
         $(this).find(this.selectors.topperMessage).removeClass("d-none").addClass("d-block").text(message);
     }
 
+    // Opens the quarterly marks Excel download modal.
     handlerOpenDownloadExcelModal(event) {
         const classObject = event.data.classObject;
         // Open modal
         $(classObject).find(classObject.selectors.downloadExcelModal).modal("show");
     }
 
+    // Validates the selected quarter and branch before starting the Excel download.
     handlerConfirmDownloadExcel(event) {
         const classObject = event.data.classObject;
-        const branch = $(classObject).find(classObject.selectors.downloadExcelBranch).val();
+        const branch = $(classObject).find(classObject.selectors.filterBranch).val();
         if (!classObject.getCurrentMarkQuarter()) {
             toastr.error("Please select Quarter and Year");
             return;
@@ -929,6 +969,7 @@ class HumMarkEntry extends HTMLElement {
         classObject.downloadQuarterMarksExcel(selectedQuarter, branch);
     }
 
+    // Downloads the quarterly marks report as an Excel file.
     downloadQuarterMarksExcel(quarter, branch) {
         const classObject = this;
         if (!quarter) {
@@ -974,6 +1015,7 @@ class HumMarkEntry extends HTMLElement {
         });
     }
 
+    // Initializes Bootstrap tooltips for Mark Entry action buttons.
     initializeToolTip() {
         new bootstrap.Tooltip(this, {
             selector: '[data-bs-toggle="tooltip"]',
@@ -981,6 +1023,8 @@ class HumMarkEntry extends HTMLElement {
             trigger: 'hover focus'
         });
     }
+
+    // Initializes the confirmation popover used when cancelling mark edits.
     initializePopOver(button, onConfirm) {
 
         if (this.activeCancelConfirmation) {
@@ -1027,6 +1071,7 @@ class HumMarkEntry extends HTMLElement {
         popover.show();
     }
 
+    // Configures Toastr notification settings for Mark Entry messages.
     initializeToastr() {
         toastr.options = {
             closeButton: true,
@@ -1037,8 +1082,10 @@ class HumMarkEntry extends HTMLElement {
         };
     }
 
+    // Formats the request payload using the selected Mark Entry filters.
     markEntryFormatRequestData(requestData) {
-        this.markEntryFilterRequest = {
+      
+        return{
             draw: requestData.draw,
             length: Number($(this).find(this.selectors.filterLength).val()) || requestData.length || 10,
             start: requestData.start,
@@ -1051,15 +1098,16 @@ class HumMarkEntry extends HTMLElement {
                 markValue: Number($(this).find(this.selectors.filterValue).val())
             },
             order: {
-                column: "",
+                column:"",
                 type: ""
             },
             search: $(this).find(this.selectors.filterSearch).val(),
             searchColumn: "Fullname" || ""
         }
-        return this.markEntryFilterRequest;
+        
     }
 
+    // Combines student and mark API responses into the Mark Entry table data.
     displayMarkEntryList(markResponse, studentResponse) {
         const markEntryDataArray = [];
         if (
@@ -1158,6 +1206,8 @@ class HumMarkEntry extends HTMLElement {
         }
         return markEntryDataArray;
     }
+
+    // Generates the action buttons for viewing, downloading, and emailing marks.
     forAction(markId, studentId, quarter, studentName, branch) {
         return `
         <!-- View Marks - API 6.3 -->
@@ -1213,6 +1263,7 @@ class HumMarkEntry extends HTMLElement {
     `;
     }
 
+    // Returns the formatted result status label.
     forResult(Result) {
         if (Result === "Pass") {
             return `<span class="hum-mark-status-pass hum-mark-status ">Pass</span>`;
@@ -1220,28 +1271,40 @@ class HumMarkEntry extends HTMLElement {
         return `<span class="hum-mark-status-fail hum-mark-status ">Fail</span>`;
     }
 
+    // Returns the formatted attendance compliance status label.
     forCompliance(complianceStatusFlag) {
         if (complianceStatusFlag === "Compliant") {
             return `<span class="hum-mark-compliance-yes hum-mark-compliance">Compliant</span>`;
         }
         return `<span class="hum-mark-compliance-no hum-mark-compliance ">Not Compliant</span>`;
     }
+
+    // Generates the editable Tamil mark input field.
     forTamil(tamil) {
         return `<input class="hum-edit-in hum_edit_tamil mark-input" disabled value=${tamil}>`
     }
+
+    // Generates the editable English mark input field.
     forEnglish(english) {
         return `<input class="hum-edit-in hum_edit_english mark-input"  disabled value=${english}>`
     }
+
+    // Generates the editable Maths mark input field.
     forMaths(maths) {
         return `<input class="hum-edit-in hum_edit_maths mark-input"  disabled value=${maths}>`
     }
+
+    // Generates the editable Science mark input field.
     forScience(science) {
         return `<input class="hum-edit-in hum_edit_science mark-input"  disabled value=${science}>`
     }
+
+    // Generates the editable Social Science mark input field.
     forSocialScience(social) {
         return `<input class="hum-edit-in hum_edit_social mark-input" disabled value=${social}>`
     }
 
+    // Populates the year dropdowns used across Mark Entry sections.
     handlerYearOption() {
         const today = new Date();
         let curyear = today.getFullYear() + 1;
@@ -1257,6 +1320,7 @@ class HumMarkEntry extends HTMLElement {
         $(this).find(this.selectors.viewStudentYear).html(`<option value="">Select Year</option>${options}`);
     }
 
+    // Initializes or refreshes the Mark Entry DataTable.
     getMarkEntryList() {
         if (this.markEntryDataTable) {
             const selectedLength = Number($(this).find(this.selectors.filterLength).val()) || 10;

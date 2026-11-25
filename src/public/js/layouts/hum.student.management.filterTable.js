@@ -1,3 +1,4 @@
+
 class HumStudentManagementFiltertable extends HTMLElement {
     constructor() {
         super();
@@ -28,6 +29,7 @@ class HumStudentManagementFiltertable extends HTMLElement {
         };
         this.studentDataTable = null;
         this.studentDataTableConfig = {
+            order: [0, 'asc'],
             processing: true,
             serverSide: true,
             length: 10,
@@ -42,7 +44,7 @@ class HumStudentManagementFiltertable extends HTMLElement {
                 dataSrc: jsonResponse => this.displayStudentDataList(jsonResponse)
             },
             columns: [
-                { data: "sno", searchable: false, orderable: false, visible: true },
+                { data: "sno", searchable: false, orderable: true, visible: true },
                 { data: "name", searchable: false, orderable: false, visible: true },
                 { data: "branchOfStudy", searchable: false, orderable: false, visible: true },
                 { data: "gender", searchable: false, orderable: false, visible: true },
@@ -58,6 +60,7 @@ class HumStudentManagementFiltertable extends HTMLElement {
         };  
     }
 
+    // Initializes the Student Management page by registering events, tooltips, notifications, and loading student records.
     connectedCallback() {
         try {
             this.bindAllRequiredEvents();
@@ -70,6 +73,7 @@ class HumStudentManagementFiltertable extends HTMLElement {
         }
     }
 
+    // Registers delegated event handlers for student registration, searching, filtering, viewing, editing, and status changes.
     bindAllRequiredEvents() {
         $(this)
             .on("click", this.selectors.addStudentButton, { classObject: this }, this.handlerAddStudentBtn)
@@ -81,6 +85,7 @@ class HumStudentManagementFiltertable extends HTMLElement {
             .on("click", this.selectors.studentStatusButton, { classObject: this }, this.handlerStatusStudentClick);
     }
 
+    // Initializes Bootstrap tooltips for dynamically generated elements when the user hovers over them.
     initializeToolTip() {
         $(this).on("mouseenter", '[data-bs-toggle="tooltip"]', function () {
             if (!bootstrap.Tooltip.getInstance(this)) {
@@ -92,6 +97,7 @@ class HumStudentManagementFiltertable extends HTMLElement {
         });
     }
 
+    // Disposes all initialized tooltips and removes their associated DOM references from the Student Management component.
     disposeAllToolTips() {
         $(this).find('[data-bs-toggle="tooltip"]').each(function () {
             const tooltip = bootstrap.Tooltip.getInstance(this);
@@ -105,6 +111,7 @@ class HumStudentManagementFiltertable extends HTMLElement {
         });
     }
 
+    // Cleans up initialized tooltips and their references when the Student Management component is removed from the DOM.
     disconnectedCallback() {
         // Dispose tooltips attached to dynamically generated buttons
         $(this).find('[data-bs-toggle="tooltip"]').each(function () {
@@ -127,6 +134,7 @@ class HumStudentManagementFiltertable extends HTMLElement {
         }
     }
 
+    // Configures Toastr notification settings for displaying success and error messages.
     initializeToastr() {
         toastr.options = {
             closeButton: true,
@@ -137,24 +145,26 @@ class HumStudentManagementFiltertable extends HTMLElement {
         };
     }
 
+    // Navigates to the Student Registration page when the Add Student button is clicked.
     handlerAddStudentBtn(event) {
         event.preventDefault();
         const classObject = event.data.classObject;
         $(classObject.selectors.smsMainContainer).html("<hum-student-management-register></hum-student-management-register>");
     }
 
+    // Reloads the student DataTable using the selected page length when the search input or search column changes.
     handlerStudentSearch(event) {
         const classObject = event.data.classObject;
-        const length = Number($(classObject.selectors.lengthFilter).val()) || 10;
-        classObject.studentDataTable.page.len(length).draw(true);
+            classObject.getStudentList();
     }
 
+    // Applies the selected student filter values by refreshing the DataTable with the current page length.
     handlerStudentFilter(event) {
         const classObject = event.data.classObject;
-        const length = Number($(classObject.selectors.lengthFilter).val()) || 10;
-        classObject.studentDataTable.page.len(length).draw(true);
+           classObject.getStudentList();
     }
 
+    // Navigates to the selected student's profile page using the student ID from the clicked View button.
     // View Student Button
     handlerViewStudentClick(event) {
         const classObject = event.data.classObject;
@@ -162,12 +172,14 @@ class HumStudentManagementFiltertable extends HTMLElement {
         $(classObject.selectors.smsMainContainer).html(`<hum-student-management-profile student-id="${studentId}"></hum-student-management-profile>`);
     }
 
+    // Navigates to the Student Registration page with the selected student ID to load the student's details for editing.
     handlerEditStudentClick(event) {
         const classObject = event.data.classObject;
         const studentId = $(event.currentTarget).data("student-id");
         $(classObject.selectors.smsMainContainer).html(`<hum-student-management-register student-id="${studentId}"></hum-student-management-register>`);
     }
 
+    // Displays a confirmation dialog and changes the selected student's active/inactive status after confirmation.
     handlerStatusStudentClick(event) {
         const classObject = event.data.classObject;
         const studentId = $(event.currentTarget).data("student-id");
@@ -195,6 +207,7 @@ class HumStudentManagementFiltertable extends HTMLElement {
         });
     }
 
+    // Sends a request to the Student Status API to activate or deactivate the selected student and handles the response.
     studentStatusChange(studentId) {
         const classObject = this;
         $.ajax({
@@ -214,8 +227,13 @@ class HumStudentManagementFiltertable extends HTMLElement {
         });
     }
 
+    // Formats DataTables pagination, student filter values, and search criteria into the request structure required by the Student API.
     studentFormatRequestData(requestData) {
         const classObject = this;
+        const orderByColumnIndex = requestData.order?.[0]?.column ?? 0;
+        const orderByType = requestData.order?.[0]?.dir ?? "asc";
+        const orderByColumn = requestData.columns?.[orderByColumnIndex]?.data ?? "sno";
+
         this.studentFilterRequest = {
             draw: requestData.draw,
             length: Number($(classObject.selectors.lengthFilter).val()) || 10,
@@ -227,8 +245,8 @@ class HumStudentManagementFiltertable extends HTMLElement {
                 branchOfStudy: $(classObject.selectors.departmentFilter).val() || ""
             },
             order: {
-                column: "",
-                type: ""
+                column: orderByColumn,
+                type: orderByType
             },
             search: $(classObject.selectors.searchInput).val() || "",
             searchColumn: $(classObject.selectors.searchColumn).val() || ""
@@ -236,6 +254,7 @@ class HumStudentManagementFiltertable extends HTMLElement {
         return this.studentFilterRequest;
     }
 
+    // Converts the Student API response into DataTable rows and formats department, residence, gender, and status values for display.
     displayStudentDataList(response) {
         const studentDataArray = [];
         if (response.status === "Success") {
@@ -299,7 +318,7 @@ class HumStudentManagementFiltertable extends HTMLElement {
                         studentGender = "";
                         break;
                 }
-                data["sno"] = index++;
+                data["sno"] = res.sno;
                 data["name"] = [res.firstName, res.middleName, res.lastName].filter(Boolean).join(" ");
                 data["branchOfStudy"] = branchOfStudy;
                 data["gender"] = studentGender;
@@ -314,6 +333,7 @@ class HumStudentManagementFiltertable extends HTMLElement {
         return studentDataArray;
     }
 
+    // Generates View, Edit, and Active/Inactive action buttons with the corresponding icons and student ID for each table row.
     forAction(studentId, activeStatusFlag) {
         const statusIcon = activeStatusFlag === "A" ? "person_check" : "person_off";
         const statusTitle = activeStatusFlag === "A" ? "Active" : "Inactive";
@@ -344,6 +364,7 @@ class HumStudentManagementFiltertable extends HTMLElement {
     `;
     }
 
+    // Returns the appropriate HTML status label based on whether the student is active or inactive.
     forActive(activeFlag) {
         if (activeFlag === "Active") {
             return `<span class="student-status-active student-status">Active</span>`;
@@ -351,12 +372,17 @@ class HumStudentManagementFiltertable extends HTMLElement {
         return `<span class="student-status-inactive student-status">Inactive</span>`;
     }
 
+    // Initializes the Student DataTable if it has not already been created.
     getStudentList() {
+        $(this).find("table").addClass("d-none")
         if (this.studentDataTable) {
+         const length = Number($(this.selectors.lengthFilter).val()) || 10;
+           this.studentDataTable.page.len(length).draw(true);
         }
         else {
             this.studentDataTable = $(this.selectors.studentTable).DataTable(this.studentDataTableConfig);
         }
+        $(this).find("table").removeClass("d-none")
     }
 }
 customElements.define("hum-student-management-filtertable", HumStudentManagementFiltertable);

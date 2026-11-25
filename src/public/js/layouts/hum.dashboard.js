@@ -1,4 +1,5 @@
 class HumSmsDashboard extends HTMLElement {
+    // Initializes the dashboard template, selectors, chart instances, and branch settings.
     constructor() {
         super();
         const template = document.getElementById("hum_sms_dashboard");
@@ -10,26 +11,21 @@ class HumSmsDashboard extends HTMLElement {
             attendanceAverage: "#hum_dashboard_attendance_average",
             topScore: "#hum_dashboard_top_score",
             topperQuarter: "#hum_dashboard_topper_quarter",
-
             // Filter
             quarter: "#hum_dashboard_quarter",
             year: "#hum_dashboard_year",
-
             // Branch Chart
             branchChart: "#hum_dashboard_branch_chart",
             branchLegend: "#hum_dashboard_branch_legend",
-
             // Student Trend
             trendPlaceholder: "#hum_dashboard_trend_placeholder",
             trendContainer: "#hum_dashboard_trend_container",
             studentTrendChart: "#hum_dashboard_student_trend_chart",
-
             // Attendance
             attendanceChart: "#hum_dashboard_attendance_chart",
             presentCount: "#hum_dashboard_present_count",
             absentCount: "#hum_dashboard_absent_count",
             attendanceRate: "#hum_dashboard_attendance_rate",
-
             // Quick Actions
             addStudentButton: "#hum_dashboard_add_student",
             addTeacherButton: "#hum_dashboard_add_teacher",
@@ -49,6 +45,7 @@ class HumSmsDashboard extends HTMLElement {
         ];
     }
 
+    // Initializes dashboard events, notifications, and data loading.
     connectedCallback() {
         try {
             this.handlerYearOption();
@@ -65,13 +62,14 @@ class HumSmsDashboard extends HTMLElement {
         }
     }
 
+    // Binds dashboard quick-action and filter event handlers.
     bindAllRequiredEvents() {
-        $(this).on("click",[this.selectors.addStudentButton,this.selectors.addTeacherButton,this.selectors.markEntryButton,this.selectors.viewResultsButton].join(","),
-                { classObject: this },
-                this.handlerDashboardQuickAction
-            )
-            .on("change",[ this.selectors.quarter,this.selectors.year].join(","),{ classObject: this },this.handlerDashboardFilter);
+        $(this)
+            .on("click", [this.selectors.addStudentButton, this.selectors.addTeacherButton, this.selectors.markEntryButton, this.selectors.viewResultsButton].join(","), { classObject: this }, this.handlerDashboardQuickAction)
+            .on("change", [this.selectors.quarter, this.selectors.year].join(","), { classObject: this }, this.handlerDashboardFilter);
     }
+
+    // Configures Toastr notification settings.
     initializeToastr() {
         toastr.options = {
             closeButton: true,
@@ -81,8 +79,9 @@ class HumSmsDashboard extends HTMLElement {
             preventDuplicates: true
         };
     }
-  
+
     // Year dropdown + default to current quarter / year
+    // Populates the year and quarter filters with their default values.
     handlerYearOption() {
         const classObject = this;
         const today = new Date();
@@ -93,21 +92,23 @@ class HumSmsDashboard extends HTMLElement {
             options += `<option value="${curyear}">${curyear}</option>`;
             curyear -= 1;
         }
-
         $(classObject).find(classObject.selectors.year)
             .html(`<option value="">Select Year</option>${options}`)
             .val(String(currentYear));
-
         $(classObject).find(classObject.selectors.quarter)
             .val("Q" + (Math.floor(today.getMonth() / 3) + 1));
     }
+
+    // Refreshes dashboard data when the quarter or year filter changes.
     handlerDashboardFilter(event) {
         const classObject = event.data.classObject;
         classObject.getDashboardAttendance();
         classObject.getDashboardTopper();
         classObject.getDashboardStudentTrend();
     }
+
     // Quick action buttons (working - unchanged)
+    // Navigates to the module selected from a dashboard quick action.
     handlerDashboardQuickAction(event) {
         event.preventDefault();
         const classObject = event.data.classObject;
@@ -120,6 +121,7 @@ class HumSmsDashboard extends HTMLElement {
         }
     }
 
+    // Returns the selected quarter and year value.
     getSelectedQuarter() {
         const classObject = this;
         const quarter = $(classObject).find(classObject.selectors.quarter).val();
@@ -129,6 +131,8 @@ class HumSmsDashboard extends HTMLElement {
         }
         return quarter + "-" + year;
     }
+
+    // Builds the student-list API request payload.
     dashboardFormatStudentRequest(branch, length) {
         return {
             draw: 1,
@@ -148,12 +152,13 @@ class HumSmsDashboard extends HTMLElement {
             searchColumn: ""
         };
     }
+
+    // Builds the attendance API request payload.
     dashboardFormatAttendanceRequest(statusFlag, quarterValue) {
         return {
             draw: 1,
             length: 1,
             start: 0,
-
             attendanceFilter: {
                 date: null,
                 statusFlag: statusFlag,
@@ -167,34 +172,32 @@ class HumSmsDashboard extends HTMLElement {
             },
             search: "",
             searchColumn: "",
-
             filterBy: "Quarter",
             filterValue: quarterValue
         };
     }
 
+    // Builds the attendance-report API request payload.
     dashboardFormatReportRequest(quarterValue) {
         return {
             draw: 1,
             length: 1,
             start: 0,
-
             attendanceReportFilter: {
                 quarter: quarterValue,
                 complianceStatusFlag: "",
                 studentBranchOfStudy: ""
             },
-
             order: {
                 column: "",
                 type: ""
             },
-
             search: "",
             searchColumn: ""
         };
     }
 
+    // Fetches the total student count.
     getDashboardStudentCount() {
         const classObject = this;
         $.ajax({
@@ -217,51 +220,55 @@ class HumSmsDashboard extends HTMLElement {
         });
     }
 
+    // Displays the total student count.
     displayDashboardStudentCount(response) {
         const classObject = this;
         $(classObject).find(classObject.selectors.totalStudents).text(response.recordsFiltered ?? "--");
     }
-    
- getDashboardTeacherCount() {
-    const classObject = this;
-    $.ajax({
-        url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/teacher/all",
-        type: "POST",
-        contentType: "application/json",
-        dataType: "json",
-        data: JSON.stringify({
-            draw: 1,
-            length: 10,
-            start: 0,
-            teacherFilter: {
-                teacherActiveFlag: ""
-            },
-            order: {
-                column: "sno",
-                type: "desc"
-            },
-            search: "",
-            searchColumn: "TeacherName"
-        }),
-        success: function (response) {
-            if (response.status === "Success") {
-                classObject.displayDashboardTeacherCount(response);
-            } else {
-                console.error(response);
-            }
-        },
-        error: function (xhr) {
-            console.error("Teacher API Error:", xhr.responseText);
-            toastr.error("Unable to load teacher count");
-        }
-    });
-}
 
+    // Fetches the total teacher count.
+    getDashboardTeacherCount() {
+        const classObject = this;
+        $.ajax({
+            url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/teacher/all",
+            type: "POST",
+            contentType: "application/json",
+            dataType: "json",
+            data: JSON.stringify({
+                draw: 1,
+                length: 10,
+                start: 0,
+                teacherFilter: {
+                    teacherActiveFlag: ""
+                },
+                order: {
+                    column: "sno",
+                    type: "desc"
+                },
+                search: "",
+                searchColumn: "TeacherName"
+            }),
+            success: function (response) {
+                if (response.status === "Success") {
+                    classObject.displayDashboardTeacherCount(response);
+                } else {
+                    console.error(response);
+                }
+            },
+            error: function (xhr) {
+                console.error("Teacher API Error:", xhr.responseText);
+                toastr.error("Unable to load teacher count");
+            }
+        });
+    }
+
+    // Displays the total teacher count.
     displayDashboardTeacherCount(response) {
         const classObject = this;
         $(classObject).find(classObject.selectors.totalTeachers).text(response.recordsTotal);
     }
 
+    // Fetches student counts for each branch.
     getDashboardBranchData() {
         const classObject = this;
         // stored by index so labels and colors always match
@@ -279,7 +286,6 @@ class HumSmsDashboard extends HTMLElement {
                     if (response.status === "Success") {
                         count = Number(response.recordsFiltered || 0);
                     }
-
                     branchCounts[index] = { branch: branch, count: count };
                 },
                 error: function (error) {
@@ -296,7 +302,7 @@ class HumSmsDashboard extends HTMLElement {
         });
     }
 
-
+    // Prepares branch data for the chart and legend.
     displayDashboardBranchChart(branchCounts) {
         const classObject = this;
         const branchLabels = branchCounts.map(item => item.branch);
@@ -305,6 +311,7 @@ class HumSmsDashboard extends HTMLElement {
         classObject.displayBranchLegend(branchLabels, branchValues);
     }
 
+    // Creates or refreshes the branch distribution chart.
     initializeBranchChart(branchLabels, branchValues) {
         const classObject = this;
         const canvas = $(classObject).find(classObject.selectors.branchChart)[0];
@@ -317,7 +324,6 @@ class HumSmsDashboard extends HTMLElement {
         }
         // all values 0 -> Chart.js draws nothing, so show a grey ring
         const hasData = branchValues.some(value => value > 0);
-
         classObject.branchChartInstance = new Chart(canvas, {
             type: "doughnut",
             data: {
@@ -341,8 +347,8 @@ class HumSmsDashboard extends HTMLElement {
         });
     }
 
+    // Displays the branch chart legend.
     displayBranchLegend(branchLabels, branchValues) {
-
         const classObject = this;
         let legendHtml = "";
         branchLabels.forEach(function (branch, index) {
@@ -355,10 +361,10 @@ class HumSmsDashboard extends HTMLElement {
                 </div>
             `;
         });
-
         $(classObject).find(classObject.selectors.branchLegend).html(legendHtml);
     }
 
+    // Fetches present and absent attendance counts for the selected quarter.
     getDashboardAttendance() {
         const classObject = this;
         const quarterValue = classObject.getSelectedQuarter();
@@ -377,7 +383,6 @@ class HumSmsDashboard extends HTMLElement {
                 data: JSON.stringify(
                     classObject.dashboardFormatAttendanceRequest(statusFlag, quarterValue)
                 ),
-
                 success: function (response) {
                     if (response.status === "Success") {
                         counts[statusFlag] = Number(response.recordsFiltered || 0);
@@ -404,7 +409,7 @@ class HumSmsDashboard extends HTMLElement {
         });
     }
 
-
+    // Displays attendance totals and the attendance rate.
     displayDashboardAttendance(presentCount, absentCount) {
         const classObject = this;
         const totalCount = presentCount + absentCount;
@@ -416,6 +421,7 @@ class HumSmsDashboard extends HTMLElement {
         classObject.initializeAttendanceChart(presentCount, absentCount);
     }
 
+    // Creates or refreshes the attendance chart.
     initializeAttendanceChart(presentCount, absentCount) {
         const classObject = this;
         const canvas = $(classObject).find(classObject.selectors.attendanceChart)[0];
@@ -450,6 +456,7 @@ class HumSmsDashboard extends HTMLElement {
         });
     }
 
+    // Fetches the topper details for the selected quarter.
     getDashboardTopper() {
         const classObject = this;
         const quarterValue = classObject.getSelectedQuarter();
@@ -461,7 +468,6 @@ class HumSmsDashboard extends HTMLElement {
                 + quarterValue,
             type: "POST",
             dataType: "json",
-
             success: function (response) {
                 if (response.status === "Success" && response.data) {
                     classObject.displayDashboardTopper(response);
@@ -475,19 +481,18 @@ class HumSmsDashboard extends HTMLElement {
             }
         });
     }
+
+    // Displays the selected quarter's topper details.
     displayDashboardTopper(response) {
-
         const classObject = this;
-
         const topperData = response.data;
-
         $(classObject).find(classObject.selectors.topScore)
             .text(topperData.totalMark ?? "--");
-
         $(classObject).find(classObject.selectors.topperQuarter)
             .text(topperData.quarterAndYear ?? topperData.quarter ?? "Selected Quarter");
     }
 
+    // Fetches student trend data for the recent five quarters.
     getDashboardStudentTrend() {
         const classObject = this;
         // last 5 quarters ending with the selected quarter
@@ -536,6 +541,7 @@ class HumSmsDashboard extends HTMLElement {
         });
     }
 
+    // Displays the student trend when data is available.
     displayDashboardStudentTrend(labels, values) {
         const classObject = this;
         const hasData = values.some(value => value > 0);
@@ -549,20 +555,16 @@ class HumSmsDashboard extends HTMLElement {
         );
     }
 
-
+    // Creates or refreshes the student trend chart.
     initializeStudentTrendChart(labels, values) {
-
         const classObject = this;
-
         const canvas = $(classObject).find(classObject.selectors.studentTrendChart)[0];
-
         if (!canvas || typeof Chart === "undefined") {
             console.error("Chart.js is not loaded.");
             return;
         }
         $(classObject).find(classObject.selectors.trendPlaceholder).addClass("d-none");
         $(classObject).find(classObject.selectors.trendContainer).removeClass("d-none");
-
         if (classObject.studentTrendChartInstance) {
             classObject.studentTrendChartInstance.destroy();
         }
@@ -604,7 +606,6 @@ class HumSmsDashboard extends HTMLElement {
             }
         });
     }
-
 }
 
 customElements.define("hum-sms-dashboard", HumSmsDashboard);

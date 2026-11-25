@@ -1,4 +1,5 @@
 class HumHolidayManagement extends HTMLElement {
+    // Creates the holiday management component and initializes its selectors, state, and calendar configuration.
     constructor() {
         super();
         const template = document.getElementById("hum_holiday_management");
@@ -10,7 +11,7 @@ class HumHolidayManagement extends HTMLElement {
             holidayTypeFilter: "#hum_holiday_type_filter",
             holidayStatusFilter: "#hum_holiday_status_filter",
             holidayMonthFilter: "#hum_holiday_month_filter",
-            holidayFormFilter:".form-holiday-filter",
+            holidayFormFilter: ".form-holiday-filter",
             holidayYearValue: "#hum_holiday_year_value",
             applyFiltersButton: "#hum_holiday_apply_filters",
             resetFiltersButton: "#hum_holiday_reset_filters",
@@ -35,7 +36,7 @@ class HumHolidayManagement extends HTMLElement {
             holidayTableBody: "#hum_holiday_table_body",
             holidayTable: ".hum-holiday-table",
             removeHolidayRow: ".hum-remove-holiday",
-            holidayFilterChanges:"#hum_holiday_changes"
+            holidayFilterChanges: "#hum_holiday_changes"
         };
         // list of holidays added in the declare modal
         this.holidayDeclareList = [];
@@ -76,6 +77,7 @@ class HumHolidayManagement extends HTMLElement {
         };
     }
 
+    // Initializes the holiday management page when the component is added to the document.
     connectedCallback() {
         try {
             this.handlerYearOption();
@@ -90,6 +92,7 @@ class HumHolidayManagement extends HTMLElement {
         }
     }
 
+    // Registers the event handlers for holiday actions, filters, and form inputs.
     bindAllRequiredEvents() {
         $(this)
             .on("click", this.selectors.declareHolidayButton, { classObject: this }, this.handlerDeclareBtnClick)
@@ -102,10 +105,11 @@ class HumHolidayManagement extends HTMLElement {
             .on("click", this.selectors.confirmCancelHolidayButton, { classObject: this }, this.handlerConfirmCancelHoliday)
             .on("click", this.selectors.holidayDetailsCancelButton, { classObject: this }, this.handlerCancelFromDetails)
             .on("input change", `${this.selectors.cancelHolidayDate}, ${this.selectors.cancelHolidayReason}`, { classObject: this }, this.handlerCancelHolidayInput)
-            .on("input change", this.selectors.holidayFormFilter,{ classObject: this }, this.handlerResetFilterVisibility);
+            .on("input change", this.selectors.holidayFormFilter, { classObject: this }, this.handlerResetFilterVisibility);
     }
 
     // plugins
+    // Configures Toastr notification settings for holiday management messages.
     initializeToastr() {
         toastr.options = {
             closeButton: true,
@@ -116,6 +120,7 @@ class HumHolidayManagement extends HTMLElement {
         };
     }
 
+    // Sets validation rules and messages for the declare and cancel holiday forms.
     initializeHolidayValidation() {
         const classObject = this;
         $(classObject.selectors.declareHolidayModal)
@@ -133,10 +138,13 @@ class HumHolidayManagement extends HTMLElement {
                     holidayDate: "Please select a holiday date.",
                     holidayType: "Please select a holiday type."
                 },
-                errorElement: "span",
-                errorClass: "text-danger",
                 errorPlacement: function (error, element) {
-                    error.insertAfter(element);
+                    error.css("color", "red");
+                    if (element.closest(".input-group").length) {
+                        error.insertAfter(element.closest(".input-group"));
+                    } else {
+                        error.insertAfter(element);
+                    }
                 }
             });
         $(classObject.selectors.cancelHolidayModal)
@@ -158,19 +166,23 @@ class HumHolidayManagement extends HTMLElement {
                         maxlength: "Maximum 500 characters allowed."
                     }
                 },
-                errorElement: "span",
-                errorClass: "text-danger",
                 errorPlacement: function (error, element) {
-                    error.insertAfter(element);
+                    error.css("color", "red");
+                    if (element.closest(".input-group").length) {
+                        error.insertAfter(element.closest(".input-group"));
+                    } else {
+                        error.insertAfter(element);
+                    }
                 }
             });
     }
 
+    // Initializes date pickers for the holiday declaration and cancellation forms.
     initializeHolidayDatepicker() {
         const classObject = this;
         const datepickerConfig = {
             dateFormat: "m-d-Y",
-            allowInput: true,
+            allowInput: true
         };
         $(classObject.selectors.holidayDateInput)
             .flatpickr(datepickerConfig);
@@ -179,12 +191,14 @@ class HumHolidayManagement extends HTMLElement {
     }
 
     /* ---------------------- button handlers ---------------------- */
+    // Handles the declare button click and opens the holiday declaration modal.
     handlerDeclareBtnClick(event) {
         const classObject = event.data.classObject;
         classObject.holidayOpenDeclareModal("");
     }
 
     // open declare modal (selectedDate = yyyy-mm-dd, empty when opened from the button)
+    // Resets the declaration list and opens the modal with the selected date.
     holidayOpenDeclareModal(selectedDate) {
         const classObject = this;
         classObject.holidayDeclareList = [];
@@ -195,30 +209,32 @@ class HumHolidayManagement extends HTMLElement {
     }
 
     // calendar date click
+    // Handles calendar date selection and opens the appropriate modal.
     holidayHandleDateClick(info) {
         const classObject = this;
-        // week view gives date with time -> take only yyyy-mm-dd
+
         const clickedDate = info.dateStr.substring(0, 10);
-        const dateParts = clickedDate.split("-");
-        const displayDate = dateParts[1] + "-" + dateParts[2] + "-" + dateParts[0];
-        classObject.holidayOpenDeclareModal(displayDate);
-        // const existingHoliday = classObject.holidayCalendar.getEvents().find(function (calendarEvent) {
-        //     return calendarEvent.startStr.substring(0, 10) === clickedDate;
-        // });
-        // if (existingHoliday) {
-        //     classObject.holidayShowDetails(existingHoliday.extendedProps);
-        // } else {
-        //     classObject.holidayOpenDeclareModal(clickedDate);
-        // }
+        const displayDate = classObject.holidayDisplayDate(clickedDate);
+
+        const existingHoliday = classObject.holidayCalendar.getEvents().find(function (calendarEvent) {
+            return calendarEvent.startStr.substring(0, 10) === clickedDate;
+        });
+
+        if (existingHoliday && existingHoliday.extendedProps.holidayCancelledFlag !== "Y") {
+            classObject.holidayShowDetails(existingHoliday.extendedProps);
+        } else {
+            classObject.holidayOpenDeclareModal(displayDate);
+        }
     }
 
     // Cancel button inside holiday details modal
+    // Opens the cancellation modal for the selected active holiday.
     handlerCancelFromDetails(event) {
         const classObject = event.data.classObject;
         if (!classObject.holidaySelected || classObject.holidaySelected.holidayCancelledFlag === "Y") {
             return;
         }
-        const selectedDate = this.holidayChangeDateFormat(classObject.holidaySelected.holidayDate);   // yyyy-mm-dd
+        const selectedDate = classObject.holidayDisplayDate(classObject.holidaySelected.holidayDate);   // yyyy-mm-dd
         const confrimReason = classObject.selectors.cancelHolidayReason;
         // close details modal first, then open cancel modal (two modals should not overlap)
         $(classObject.selectors.confirmCancelHolidayButton).hide();
@@ -237,6 +253,7 @@ class HumHolidayManagement extends HTMLElement {
         $(classObject.selectors.holidayDetailsModal).modal("hide");
     }
 
+    // Clears the cancellation form and opens the cancellation modal.
     handlerCancelBtnClick(event) {
         const classObject = event.data.classObject;
         $(classObject.selectors.cancelHolidayDate).val("");
@@ -245,9 +262,10 @@ class HumHolidayManagement extends HTMLElement {
         $(classObject.selectors.cancelHolidayModal).modal("show");
     }
 
+    // Shows or hides the confirmation button based on the cancellation form inputs.
     handlerCancelHolidayInput(event) {
         const classObject = event.data.classObject;
-        const holidayDate = $(classObject.selectors.cancelHolidayDate).val();
+        const holidayDate = classObject.holidayDisplayDate(classObject.holidaySelected.holidayDate);
         const holidayType = $(classObject.selectors.cancelHolidayReason).val().trim();
         if (holidayDate && holidayType) {
             $(classObject.selectors.confirmCancelHolidayButton).show();
@@ -257,38 +275,40 @@ class HumHolidayManagement extends HTMLElement {
         }
     }
 
-    handlerApplyFilterBtn(event) {
-        const classObject = event.data.classObject;
-        const month = $(classObject.selectors.holidayMonthFilter).val();
-        const year = $(classObject.selectors.holidayYearValue).val();
-        // go to selected month, then reload (type / status filters also apply)
-        classObject.holidayCalendar.gotoDate(year + "-" + month + "-01");
-        classObject.getHolidayList();
-    }
+    // Applies the selected month and year and refreshes the holiday calendar.
+handlerApplyFilterBtn(event) {
+    const classObject = event.data.classObject;
+    const month = $(classObject.selectors.holidayMonthFilter).val();
+    const year = $(classObject.selectors.holidayYearValue).val();
+    classObject.holidayCalendar.gotoDate(year + "-" + month + "-01");
+    classObject.holidayCalendar.refetchEvents();
+}
 
-    handlerResetFilterBtn(event) {
-        const classObject = event.data.classObject;
-        const today = new Date();
-        $(classObject.selectors.holidayTypeFilter).val("");
-        $(classObject.selectors.holidayStatusFilter).val("");
-        $(classObject.selectors.holidayMonthFilter)
-            .val(String(today.getMonth() + 1).padStart(2, "0"));
-        $(classObject.selectors.holidayYearValue).val(String(today.getFullYear()));
-        classObject.holidayCalendar.gotoDate(today);
-        classObject.getHolidayList();
-        // Hide reset button after resetting filters
-        $(classObject.selectors.resetFiltersButton).addClass("d-none");
-          $(classObject).find(classObject.selectors.filterChanges).text("");
-    }
+    // Resets the holiday filters to the current month and year.
+handlerResetFilterBtn(event) {
+    const classObject = event.data.classObject;
+    const today = new Date();
+    $(classObject.selectors.holidayTypeFilter).val("");
+    $(classObject.selectors.holidayStatusFilter).val("");
+    $(classObject.selectors.holidayMonthFilter)
+        .val(String(today.getMonth() + 1).padStart(2, "0"));
+    $(classObject.selectors.holidayYearValue).val(String(today.getFullYear()));
+    classObject.holidayCalendar.gotoDate(today);
+    classObject.holidayCalendar.refetchEvents();
+    $(classObject.selectors.resetFiltersButton).addClass("d-none");
+    $(classObject).find(classObject.selectors.holidayFilterChanges).text("");
+}
 
+    // Displays the reset button and filter-change message when a filter changes.
     handlerResetFilterVisibility(event) {
         const classObject = event.data.classObject;
-   
-            $(classObject.selectors.resetFiltersButton).removeClass("d-none");
-             $(classObject).find(classObject.selectors.holidayFilterChanges).text("Filter conditions changed, Click submit.");
-   
+
+        $(classObject.selectors.resetFiltersButton).removeClass("d-none");
+        $(classObject).find(classObject.selectors.holidayFilterChanges).text("Filter conditions changed, Click submit.");
+
     }
 
+    // Populates the year dropdown and sets the current month and year as defaults.
     // year dropdown + default month / year = today
     handlerYearOption() {
         const self = this;
@@ -306,6 +326,7 @@ class HumHolidayManagement extends HTMLElement {
     }
 
     /* ---------------------- declare holidays ---------------------- */
+    // Validates and adds a holiday entry to the declaration list.
     handlerAddAnotherHoliday(event) {
         const classObject = event.data.classObject;
         const holidayDate = $(classObject.selectors.holidayDateInput).val();
@@ -333,6 +354,7 @@ class HumHolidayManagement extends HTMLElement {
         $(classObject.selectors.holidayTypeInput).val("");
     }
 
+    // Renders the holidays added to the declaration list.
     displayDeclaredHolidayList() {
         const classObject = this;
         let tableRows = "";
@@ -340,7 +362,7 @@ class HumHolidayManagement extends HTMLElement {
             classObject.holidayDeclareList.forEach((holiday, index) => {
                 tableRows += `
                     <tr>
-                        <td>${classObject.holidayChangeDateFormat(holiday.holidayDate)}</td>
+                        <td>${classObject.holidayDisplayDate(holiday.holidayDate)}</td>
                         <td>${classObject.holidayTypeName(holiday.holidayType)}</td>
                         <td>
                             <button type="button"
@@ -363,6 +385,7 @@ class HumHolidayManagement extends HTMLElement {
         $(classObject.selectors.holidayTableBody).html(tableRows);
     }
 
+    // Removes the selected holiday from the declaration list.
     handlerRemoveHoliday(event) {
         const classObject = event.data.classObject;
         const index = Number($(event.currentTarget).attr("data-index"));
@@ -370,6 +393,7 @@ class HumHolidayManagement extends HTMLElement {
         classObject.displayDeclaredHolidayList();
     }
 
+    // Submits the declared holidays to the API and handles the response.
     handlerSaveHolidays(event) {
         event.preventDefault();
         const classObject = event.data.classObject;
@@ -389,25 +413,30 @@ class HumHolidayManagement extends HTMLElement {
             },
             success: function (response) {
                 $(classObject.selectors.saveHolidayButton).prop("disabled", false);
+
                 const result = classObject.holidayReadApiResult(response);
+
                 if (result.successDates.length > 0) {
-                    // remove the saved dates from the list, failed dates stay for correction
+                    toastr.success(response.data);
+
                     classObject.holidayDeclareList = classObject.holidayDeclareList.filter(function (holiday) {
                         const apiDate = classObject.holidayChangeDateFormat(holiday.holidayDate);
                         return result.successDates.indexOf(apiDate) === -1;
                     });
+
                     classObject.displayDeclaredHolidayList();
-                    // show saved holidays on the calendar
-                    classObject.holidayCalendar.gotoDate(firstSavedDate);
-                    classObject.getHolidayList();
+
+                    classObject.holidayCalendar.gotoDate(classObject.holidayCalendarDate(firstSavedDate));
+                       classObject.holidayCalendar.refetchEvents();
                 }
+
                 if (result.failureMessages.length === 0) {
                     toastr.success("Holidays declared successfully.");
                     $(classObject.selectors.declareHolidayModal).modal("hide");
                 }
                 else {
                     toastr.error(result.failureMessages.join("\n"));
-                    // nothing left to correct -> close
+
                     if (classObject.holidayDeclareList.length === 0) {
                         $(classObject.selectors.declareHolidayModal).modal("hide");
                     }
@@ -421,7 +450,7 @@ class HumHolidayManagement extends HTMLElement {
         });
     }
 
-    // request body for declare API
+    // Formats the declaration list into the request data required by the API.
     holidayFormatSaveData() {
         const classObject = this;
         return classObject.holidayDeclareList.map((holiday) => {
@@ -433,8 +462,15 @@ class HumHolidayManagement extends HTMLElement {
             };
         });
     }
-
+holidayCalendarDate(dateString) {
+    if (!dateString) {
+        return "";
+    }
+    const [month, day, year] = dateString.split("-");
+    return year + "-" + month.padStart(2, "0") + "-" + day.padStart(2, "0");
+}
     /* ---------------------- cancel holiday ---------------------- */
+    // Validates and submits the selected holiday cancellation after confirmation.
     handlerConfirmCancelHoliday(event) {
         event.preventDefault();
         const classObject = event.data.classObject;
@@ -486,8 +522,8 @@ class HumHolidayManagement extends HTMLElement {
                             $(classObject.selectors.cancelHolidayDate).val("");
                             $(classObject.selectors.cancelHolidayReason).val("");
                             $(classObject.selectors.cancelHolidayModal).modal("hide");
-                            classObject.holidayCalendar.gotoDate(holidayDate);
-                            classObject.getHolidayList();
+                           classObject.holidayCalendar.gotoDate(classObject.holidayCalendarDate(holidayDate));
+                           classObject.holidayCalendar.refetchEvents();
                         }
                         else {
                             toastr.error(result.failureMessages.join("\n"));
@@ -505,6 +541,7 @@ class HumHolidayManagement extends HTMLElement {
 
     /* ---------------------- holiday list ---------------------- */
     // same idea as getStudentList : create once, next time just reload
+    // Creates the calendar or refreshes its events when it already exists.
     getHolidayList() {
         if (this.holidayCalendar) {
             this.holidayCalendar.refetchEvents();
@@ -522,6 +559,7 @@ class HumHolidayManagement extends HTMLElement {
         }
     }
 
+    // Gets the month and year represented by the calendar date range.
     // month and year of the page which calendar is showing (taken from visible range)
     holidayGetMonthYear(rangeStart, rangeEnd) {
         const middleTime = (rangeStart.getTime() + rangeEnd.getTime()) / 2;
@@ -532,6 +570,7 @@ class HumHolidayManagement extends HTMLElement {
         };
     }
 
+    // Synchronizes the month and year filters with the calendar view.
     // calendar moved (prev / next / view change) -> update dropdowns
     holidaySyncMonthYearFilter(dateInfo) {
         const classObject = this;
@@ -543,6 +582,7 @@ class HumHolidayManagement extends HTMLElement {
         $(classObject.selectors.holidayYearValue).val(monthYear.year);
     }
 
+    // Builds the holiday list API request using the selected filters and calendar range.
     holidayFormatRequestData(fetchInfo) {
         const classObject = this;
         const monthYear = classObject.holidayGetMonthYear(fetchInfo.start, fetchInfo.end);
@@ -565,6 +605,7 @@ class HumHolidayManagement extends HTMLElement {
         return classObject.holidayFilterRequest;
     }
 
+    // Fetches holiday records from the API and returns the processed calendar events.
     holidayListApi(fetchInfo) {
         const classObject = this;
         return new Promise(function (resolve, reject) {
@@ -585,6 +626,7 @@ class HumHolidayManagement extends HTMLElement {
         });
     }
 
+    // Converts the holiday API response into FullCalendar event objects.
     // API response -> calendar events
     displayHolidayDataList(response) {
         const classObject = this;
@@ -615,6 +657,7 @@ class HumHolidayManagement extends HTMLElement {
         return holidayEvents;
     }
 
+    // Displays the selected holiday details in the details modal.
     // holiday click -> details modal
     holidayShowDetails(holiday) {
         const classObject = this;
@@ -623,7 +666,7 @@ class HumHolidayManagement extends HTMLElement {
         // cancel button works only for active holiday
         $(classObject.selectors.holidayDetailsCancelButton).prop("disabled", isCancelled);
         $(classObject.selectors.holidayDetailId).text(holiday.holidayId || "—");
-        $(classObject.selectors.holidayDetailDate).text(classObject.holidayChangeDateFormat(holiday.holidayDate));
+        $(classObject.selectors.holidayDetailDate).text(classObject.holidayDisplayDate(holiday.holidayDate));
         $(classObject.selectors.holidayDetailType).text(classObject.holidayTypeName(holiday.holidayType) || "—");
         $(classObject.selectors.holidayDetailStatus).text(isCancelled ? "Cancelled" : "Active");
         $(classObject.selectors.holidayDetailReason).text(isCancelled ? (holiday.holidayCancelledReason || "—") : "—");
@@ -631,6 +674,7 @@ class HumHolidayManagement extends HTMLElement {
     }
 
     /* ---------------------- common helpers ---------------------- */
+    // Returns the display name for the supplied holiday type code.
     holidayTypeName(holidayType) {
         let holidayName = "";
         switch (holidayType) {
@@ -659,26 +703,39 @@ class HumHolidayManagement extends HTMLElement {
         return holidayName;
     }
 
+    // Converts holiday dates between the API and calendar display formats.
     // yyyy-mm-dd <-> dd-mm-yyyy (same swap works both ways)
     // Convert m-d-Y <-> Y-m-d
     holidayChangeDateFormat(dateString) {
         if (!dateString) {
             return "";
         }
+
+        const [month, day, year] = dateString.split("-");
+
+        return day.padStart(2, "0") + "-" +
+            month.padStart(2, "0") + "-" + year;
+    }
+
+    holidayDisplayDate(dateString) {
+        if (!dateString) {
+            return "";
+        }
+
         const dateParts = dateString.split("-");
-        // API date: dd-mm-yyyy
-        if (dateParts[0].length === 2 && dateParts[2].length === 4) {
-            return dateParts[2] + "-" + dateParts[1] + "-" + dateParts[0];
+
+        if (dateParts[0].length === 4) {
+            return dateParts[1] + "-" + dateParts[2] + "-" + dateParts[0];
         }
-        // Display date: m-d-Y -> FullCalendar date: Y-m-d
+
         if (dateParts[2].length === 4) {
-            return dateParts[2] + "-" +
-                dateParts[0].padStart(2, "0") + "-" +
-                dateParts[1].padStart(2, "0");
+            return dateParts[1] + "-" + dateParts[0] + "-" + dateParts[2];
         }
+
         return dateString;
     }
 
+    // Processes the declare or cancel API response into success and failure results.
     // declare / cancel API response ->
     // { totalcount, successCount, failureCount, responses:[{status, date, data}] }
     holidayReadApiResult(response) {
