@@ -301,7 +301,7 @@ class HumDailyAttendance extends HTMLElement {
         event.preventDefault();
         const classObject = event.data.classObject;
         const branch = $(classObject.selectors.attendanceBranch).val() || "";
-        const attendanceDate = $(classObject.selectors.attendanceDate).val() || "";
+        const attendanceDate =classObject.ChangeDateFormat($(classObject.selectors.attendanceDate).val()) || null;
         // API accepts only one branch per request
         if (!branch) {
             toastr.warning("Please select a department");
