@@ -264,6 +264,7 @@ class HumMarkEntry extends HTMLElement {
         $(classObject).find(classObject.selectors.filterSubject).val();
         $(classObject).find(classObject.selectors.filterComparison).val();
         Number($(classObject).find(classObject.selectors.filterValue).val().trim());
+         $(classObject).find(classObject.selectors.filterChanges).text("");
         classObject.getMarkEntryList();
     }
 
@@ -282,7 +283,7 @@ class HumMarkEntry extends HTMLElement {
         classObject.getMarkEntryList();
         // Hide Reset button
         $(classObject).find(classObject.selectors.resetFilterButton).addClass("d-none");
-        $(classObject).find(classObject.selectors.filterChanges).text("");
+         $(classObject).find(classObject.selectors.filterChanges).text("");
     }
 
     // Displays the reset button when Mark Entry filter values change.

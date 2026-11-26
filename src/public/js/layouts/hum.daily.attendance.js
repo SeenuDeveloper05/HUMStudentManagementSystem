@@ -564,7 +564,7 @@ class HumAttendanceHistory extends HTMLElement {
             },
             columns: [
                 { data: "sno", searchable: false, orderable: true, visible: true },
-                { data: "date", searchable: false, orderable: true, visible: true },
+                { data: "date", searchable: false, orderable: false, visible: true },
                 { data: "name", searchable: false, orderable: false, visible: true },
                 { data: "branchOfStudy", searchable: false, orderable: false, visible: true },
                 { data: "status", searchable: false, orderable: false, visible: true },
@@ -626,24 +626,21 @@ class HumAttendanceHistory extends HTMLElement {
     // Applies the selected attendance history filters and page length to the table.
     handlerAttendanceHistoryFilter(event) {
         const classObject = event.data.classObject;
-        const length = Number($(classObject.selectors.historyLength).val()) || 20;
-        classObject.attendanceHistoryDataTable.page.len(length).draw(true);
+          classObject.getAttendanceHistoryList();
     }
 
     // Page length dropdown change
     // Updates the attendance history table when the page length selection changes.
     handlerAttendanceHistoryLengthChange(event) {
-        const classObject = event.data.classObject;
-        const length = Number($(event.currentTarget).val()) || 20;
-        classObject.attendanceHistoryDataTable.page.len(length).draw(true);
+        const classObject = event.data.classObject;     
+        classObject.getAttendanceHistoryList();
     }
 
     // Called by the Daily Attendance page every time the History tab is opened
     // Refreshes the attendance history table when the History tab is opened.
     reloadAttendanceHistoryList() {
         if (this.attendanceHistoryDataTable) {
-            const length = Number($(this.selectors.historyLength).val()) || 20;
-            this.attendanceHistoryDataTable.page.len(length).draw(true);
+              classObject.getAttendanceHistoryList();
         }
     }
 
@@ -758,6 +755,10 @@ class HumAttendanceHistory extends HTMLElement {
     getAttendanceHistoryList() {
         if (!this.attendanceHistoryDataTable) {
             this.attendanceHistoryDataTable = $(this).find(this.selectors.historyTable).DataTable(this.attendanceHistoryDataTableConfig);
+        }
+        else{
+              const length = Number($(this.selectors.historyLength).val()) || 20;
+             this.attendanceHistoryDataTable.page.len(length).draw(true);
         }
     }
 }

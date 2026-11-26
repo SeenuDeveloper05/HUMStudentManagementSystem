@@ -247,6 +247,7 @@ class HumTeacherManagement extends HTMLElement {
             search: $(classObject).find(classObject.selectors.searchInput).val().trim(),
             searchColumn: $(classObject).find(classObject.selectors.searchColumn).val() || "TeacherName"
         };
+         $(classObject).find(classObject.selectors.filterChanges).text("");
         classObject.getTeacherList();
     }
 
@@ -274,7 +275,7 @@ class HumTeacherManagement extends HTMLElement {
         // Reload the unfiltered list.
         classObject.getTeacherList();
         $(classObject).find(classObject.selectors.resetFilterButton).addClass("d-none");
-        $(classObject).find(classObject.selectors.filterChanges).text("");
+         $(classObject).find(classObject.selectors.filterChanges).text("");
     }
 
     // Enables or disables the Add Teacher save button based on whether at least one visible input field contains a value.

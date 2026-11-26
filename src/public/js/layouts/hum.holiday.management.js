@@ -281,6 +281,7 @@ handlerApplyFilterBtn(event) {
     const month = $(classObject.selectors.holidayMonthFilter).val();
     const year = $(classObject.selectors.holidayYearValue).val();
     classObject.holidayCalendar.gotoDate(year + "-" + month + "-01");
+     $(classObject).find(classObject.selectors.holidayFilterChanges).text("");
     classObject.holidayCalendar.refetchEvents();
 }
 

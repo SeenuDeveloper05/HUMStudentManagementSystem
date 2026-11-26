@@ -171,7 +171,8 @@ class HumQuarterlyAttendance extends HTMLElement {
             search: $(classObject).find(classObject.selectors.filterStudent).val().trim(),
             searchColumn: "Fullname"
         };
-        classObject.getQuarterlyAttendanceList();
+          $(classObject).find(classObject.selectors.filterChanges).text("");
+          classObject.getQuarterlyAttendanceList();
     }
 
     // Reset Quarterly Filters

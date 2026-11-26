@@ -188,6 +188,7 @@ initializeStudentValidation() {
             phoneNumber: {
                 required: true,
                 digits: true,
+                validMobile: true,
                 minlength: 5,
                 maxlength: 15
             },
@@ -201,6 +202,7 @@ initializeStudentValidation() {
             emergencyContactPhoneNumber: {
                 required: true,
                 digits: true,
+                validMobile: true,
                 minlength: 5,
                 maxlength: 15
             },
@@ -243,6 +245,7 @@ initializeStudentValidation() {
             phoneNumber: {
                 required: "Please enter phone number.",
                 digits: "Please enter numbers only.",
+                validMobile:"Mobile Phone is invalid.",
                 minlength: "Phone number must contain 10 digits.",
                 maxlength: "Phone number must contain only 10 digits."
             },
@@ -256,6 +259,7 @@ initializeStudentValidation() {
             emergencyContactPhoneNumber: {
                 required: "Please enter emergency contact phone number.",
                 digits: "Please enter numbers only.",
+                validMobile:"Mobile Phone is invalid.",
                 minlength: "Emergency contact number must contain 10 digits.",
                 maxlength: "Emergency contact number must contain only 10 digits."
             },
