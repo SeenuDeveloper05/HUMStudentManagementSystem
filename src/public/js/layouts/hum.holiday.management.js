@@ -50,7 +50,7 @@ class HumHolidayManagement extends HTMLElement {
             headerToolbar: {
                 left: "prev,next",
                 center: "title",
-                right: "dayGridMonth,timeGridWeek,listMonth"
+               right: "today dayGridMonth,timeGridWeek"
             },
             // calendar asks for events -> we call the holiday list API
             events: (fetchInfo, successCallBack, failureCallBack) => {

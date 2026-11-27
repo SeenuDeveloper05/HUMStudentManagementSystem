@@ -335,9 +335,9 @@ class HumStudentManagementFiltertable extends HTMLElement {
 
     // Generates View, Edit, and Active/Inactive action buttons with the corresponding icons and student ID for each table row.
     forAction(studentId, activeStatusFlag) {
-        const statusIcon = activeStatusFlag === "A" ? "person_check" : "person_off";
-        const statusTitle = activeStatusFlag === "A" ? "Active" : "Inactive";
-        const statusClass = activeStatusFlag === "A" ? "btn btn-sm btn-outline-success" : "btn btn-sm btn-outline-danger";
+        const statusIcon = activeStatusFlag === "I" ? "person_check" : "person_off";
+        const statusTitle = activeStatusFlag === "I" ? "Active" : "Deactive";
+        const statusClass = activeStatusFlag === "I" ? "btn btn-sm btn-outline-success" : "btn btn-sm btn-outline-danger";
         return `
         <button type="button"
             class="btn btn-sm btn-outline-primary hum-student-view-btn"

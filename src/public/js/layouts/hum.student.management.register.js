@@ -69,8 +69,11 @@ class HumStudentManagementRegister extends HTMLElement {
     initializeDatePicker() {
         const classObject = this;
         const datepickerConfig = {
-            dateFormat: "d-m-Y",
-            allowInput: true
+            dateFormat: "m-d-Y",
+            allowInput: true,  
+            defaultDate: "today",
+            maxDate: "today",
+            position: "below"
         };
         $(classObject.selectors.studentDateOfBirth).flatpickr(datepickerConfig);
     }
@@ -83,6 +86,27 @@ class HumStudentManagementRegister extends HTMLElement {
         $(this).find(this.selectors.emergencyContactPhoneNumber).inputmask("(999)-999-9999", {
             autoUnmask: true
         });
+        $(this).find(this.selectors.studentDateOfBirth).inputmask("99-99-9999", {
+             placeholder: "mm-dd-yyyy",
+             autoUnmask: false
+    });
+                const classObject = this;
+                const uppercaseFields = [
+                    classObject.selectors.studentFirstName,
+                    classObject.selectors.studentMiddleName,
+                    classObject.selectors.studentLastName,
+                    classObject.selectors.emergencyContactPersonName,
+                    classObject.selectors.studentCity,
+                    classObject.selectors.studentState,
+                    classObject.selectors.studentCountry
+                ].join(",");
+
+                $(classObject).on("input", uppercaseFields, function () {
+                    const value = $(this).val();
+                    if (value.length > 0) {
+                        $(this).val(value.charAt(0).toUpperCase() + value.slice(1));
+                    }
+                });
     }
 
     // Configures Toastr notification settings for displaying success and error messages.
@@ -159,6 +183,7 @@ class HumStudentManagementRegister extends HTMLElement {
     // Configures student registration validation and focuses the first invalid field.
 initializeStudentValidation() {
     $(this).find(this.selectors.studentRegisterForm).validate({
+        ignore: [],
         focusInvalid: false,
         rules: {
             FirstName: {
@@ -196,6 +221,9 @@ initializeStudentValidation() {
                 required: true,
                 validemail: true
             },
+            unique_student_email_add:{
+                min:1
+            },
             emergencyContactPersonName: {
                 required: true
             },
@@ -223,11 +251,13 @@ initializeStudentValidation() {
             FirstName: {
                 required: "Please enter first name.",
                 minlength: "First name must contain at least 2 characters.",
+                maxlength:"Input Limit reached",
                 lettersonly: "Please enter letters only"
             },
             LastName: {
                 required: "Please enter last name.",
                 minlength: "Last name must contain at least 1 characters.",
+                maxlength:"Input Limit reached",
                 lettersonly: "Please enter letters only"
             },
             gender: {
@@ -291,23 +321,26 @@ initializeStudentValidation() {
                 firstInvalidField[0].focus({ preventScroll: true });
             });
         },
-        errorPlacement: function(error, element) {
-            error.css("color", "red");
-            if (element.closest(".input-group").length) {
-                error.insertAfter(element.closest(".input-group"));
-            } else {
-                error.insertAfter(element);
+     errorPlacement: function (error, element) {
+                error.css("color", "red");
+                if (element.closest(".input-group").length) {
+                    error.insertAfter(element.closest(".input-group"));
+                } else {
+                    error.insertAfter(element);
+                }
             }
-        }
     });
 }
     // Enables or disables the Save Student button depending on whether any non-hidden form field contains a value.
-    handlerStudentFormInput(event) {
-        const classObject = event.data.classObject;
-        const form = $(classObject).find(classObject.selectors.studentRegisterForm);
-        const hasValue = form.find(":input:not([type='hidden'])").not(classObject.selectors.studentActiveStatus).toArray().some(element => String($(element).val()).trim()!=="");
-        form.find(classObject.selectors.saveStudentButton).prop("disabled", !hasValue);
+handlerStudentFormInput(event) {
+    const classObject = event.data.classObject;
+    const form = $(classObject).find(classObject.selectors.studentRegisterForm);
+    const hasValue = form.find(":input:not([type='hidden'])").not(classObject.selectors.studentActiveStatus).toArray().some(element => String($(element).val() || "").trim() !== "");
+
+    if (hasValue) {
+        form.find(classObject.selectors.saveStudentButton).prop("disabled", false);
     }
+}
 
     // Navigates back to the Student Management listing page when the Back button is clicked.
     handlerBackStudent(event) {
@@ -340,20 +373,27 @@ handlerSaveStudent(event) {
         return;
     }
 
-    classObject.initializeStudentForm();
+    //classObject.initializeStudentForm();
     classObject.saveStudent();
 }
-
+    // date formate change
+      changeFormateDate(date){
+            if (!date) return "";
+            const parts = date.split("-");
+            return parts[1] + "-" + parts[0] + "-" + parts[2];
+      }
     // Collects student registration details and sends them to the Save or Update Student API, then handles the response.
     saveStudent() {
-        const classObject = this;
-        const studentData = {
+        $("#unique_student_email_add").val("1");
+        if($("#hum_student_register_form").valid()){
+            const classObject =this;
+     const studentData = {
             studentId: $(this).find(this.selectors.studentId).val() || null,
             firstName: $(this).find(this.selectors.studentFirstName).val().trim(),
             middleName: $(this).find(this.selectors.studentMiddleName).val().trim(),
             lastName: $(this).find(this.selectors.studentLastName).val().trim(),
             gender: $(this).find(this.selectors.studentGender).val(),
-            dateOfBirth: $(this).find(this.selectors.studentDateOfBirth).val().trim(),
+            dateOfBirth: this.changeFormateDate($(this).find(this.selectors.studentDateOfBirth).val().trim()),
             branchOfStudy: $(this).find(this.selectors.studentBranchOfStudy).val(),
             residingStatusFlag: $(this).find(this.selectors.studentResidingStatus).val(),
             phoneNumber: $(this).find(this.selectors.studentPhoneNumber).val().trim(),
@@ -369,6 +409,7 @@ handlerSaveStudent(event) {
             activeStatusFlag: $(this).find(this.selectors.studentActiveStatus).val(),
             teacherId: 6
         };
+        
         $.ajax({
             url: "https://dev-api.humhealth.com/StudentManagementSystemAPI/student/saveOrUpdate",
             type: "POST",
@@ -380,7 +421,18 @@ handlerSaveStudent(event) {
                     toastr.success(response.data);
                     $(classObject.selectors.smsMainContainer).html("<hum-student-management-filtertable></hum-student-management-filtertable>");
                 } else {
-                    toastr.error(response.data);
+                        if (response.data.includes("Duplicate Email Found ")) {       
+                                $("#unique_student_email_add").rules("add", {
+                                messages: {
+                                    min: "Email already exsist"
+                                }
+                            });
+                            $(classObject).find("#unique_student_email_add").val(0);
+                            $(classObject).find(classObject.selectors.studentRegisterForm).valid();
+                        }
+                        else {
+                            toastr.error(response.data);
+                        }
                 }
             },
             error: function (xhr) {
@@ -388,6 +440,8 @@ handlerSaveStudent(event) {
                 toastr.error("Unable to save student. Please check the entered details.");
             }
         });
+    }
+ 
     }
 
     // Displays the cancellation confirmation popover and navigates back to the student listing page when confirmed.
@@ -436,7 +490,7 @@ handlerSaveStudent(event) {
                     $(classObject).find(classObject.selectors.studentBranchOfStudy).val(student.branchOfStudy || "");
                     $(classObject).find(classObject.selectors.studentResidingStatus).val(student.residingStatusFlag || "");
                     $(classObject).find(classObject.selectors.studentTeacherId).val(student.teacherId ?? "");
-                    // console.log(student.teacherId);
+                    console.log(student.studentId);
                     $(classObject).find(classObject.selectors.studentActiveStatus).val(student.activeStatusFlag || "A");
                     $(classObject).find(classObject.selectors.studentPhoneNumber).val(student.phoneNumber || "");
                     $(classObject).find(classObject.selectors.studentEmail).val(student.mail || "");

@@ -303,13 +303,23 @@ class HumSmsDashboard extends HTMLElement {
     }
 
     // Prepares branch data for the chart and legend.
-    displayDashboardBranchChart(branchCounts) {
-        const classObject = this;
-        const branchLabels = branchCounts.map(item => item.branch);
-        const branchValues = branchCounts.map(item => item.count);
-        classObject.initializeBranchChart(branchLabels, branchValues);
-        classObject.displayBranchLegend(branchLabels, branchValues);
-    }
+displayDashboardBranchChart(branchCounts) {
+    const classObject = this;
+
+    const branchNameMap = {
+        "CSCI": "Computer Science",
+        "BIOL": "Biology",
+        "COMM": "Commerce",
+        "ZOOL": "Zoology",
+        "ARTS": "Arts"
+    };
+
+    const branchLabels = branchCounts.map(item => branchNameMap[item.branch] || item.branch);
+    const branchValues = branchCounts.map(item => item.count);
+
+    classObject.initializeBranchChart(branchLabels, branchValues);
+    classObject.displayBranchLegend(branchLabels, branchValues);
+}
 
     // Creates or refreshes the branch distribution chart.
     initializeBranchChart(branchLabels, branchValues) {

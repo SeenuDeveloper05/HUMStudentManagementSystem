@@ -84,6 +84,7 @@ class HumTeacherManagement extends HTMLElement {
                 { data: "name", searchable: false, orderable: false, visible: true },
                 { data: "speciality", searchable: false, orderable: false, visible: true },
                 { data: "email", searchable: false, orderable: false, visible: true },
+                { data: "status", searchable: false, orderable: false, visible: true },
                 { data: "action", searchable: false, orderable: false, visible: true }
             ],
             columnDefs: [
@@ -189,6 +190,13 @@ class HumTeacherManagement extends HTMLElement {
             preventDuplicates: true
         };
         const self = this;
+            $(self).find(self.selectors.addForm)
+        .on("input", "[name='teacherName'], [name='teacherSpecialty']", function () {
+            const value = $(this).val();
+            if (value.length > 0) {
+                $(this).val(value.charAt(0).toUpperCase() + value.slice(1));
+            }
+        });
         // Add Teacher Validation
         $(self).find(self.selectors.addForm).validate({
             ignore: [],
@@ -390,11 +398,15 @@ class HumTeacherManagement extends HTMLElement {
     // Retrieves the selected teacher ID, loads its details for editing, and updates the modal title and save button text.
     handlerEditTeacherClick(event) {
         const classObject = event.data.classObject;
+        const addForm = $(classObject).find(classObject.selectors.addForm)[0];
+          const validator = $(addForm).validate();
+            validator.resetForm();
         const teacherId = $(event.currentTarget).attr("data-teacher-id");
         classObject.editTeacher(teacherId);
         $(classObject).find(classObject.selectors.addTitle).text("Edit Teacher");
         $(classObject).find(classObject.selectors.addpara).text("Enter the details below to add a new teacher");
         $(classObject).find(classObject.selectors.addSaveButton).text("Update");
+
     }
 
     // Displays a confirmation dialog and changes the selected teacher's active/inactive status after confirmation.
@@ -511,30 +523,49 @@ class HumTeacherManagement extends HTMLElement {
         const teacherdataArray = [];
         if (response.status === "Success") {
             for (let res of response.data) {
+                        let activeFlag = res.teacherActiveFlag;
+                switch (activeFlag) {
+                    case "A":
+                        activeFlag = "Active";
+                        break;
+                    case "I":
+                        activeFlag = "Inactive";
+                        break;
+                    default:
+                        activeFlag = "";
+                        break;
+                }
                 const data = {};
                 data["sno"] = res.sno;
                 data["name"] = res.teacherName;
                 data["speciality"] = res.teacherSpecialty;
                 data["email"] = res.teacherEmail;
+                data["status"]=this.forStatus(activeFlag);
                 data["action"] = this.forAction(res.teacherId, res.teacherActiveFlag);
                 teacherdataArray.push(data);
             }
         }
         return teacherdataArray;
     }
+         forStatus(activeFlag) {
+        if (activeFlag === "Active") {
+            return `<span class="hum-teacher-status-active hum-teacher-status">Active</span>`;
+        }
+        return `<span class="hum-teacher-status-inactive hum-teacher-status">Inactive</span>`;
+    }
 
     // Generates the View, Edit, and Active/Inactive action buttons with the appropriate icons and status information for each teacher.
     forAction(teacherId, teacherActiveFlag) {
         const statusIcon =
-            teacherActiveFlag === "A"
+            teacherActiveFlag === "I"
                 ? "person_check"
                 : "person_off";
         const statusTitle =
-            teacherActiveFlag === "A"
-                ? "Active"
-                : "Inactive";
+            teacherActiveFlag === "I"
+                ? "Activate"
+                : "Deactivate";  
         const statusClass =
-            teacherActiveFlag === "A"
+            teacherActiveFlag === "I"
                 ? "btn btn-sm btn-outline-success"
                 : "btn btn-sm btn-outline-danger";
         return `

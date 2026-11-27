@@ -431,7 +431,7 @@ class HumMarkEntry extends HTMLElement {
                     classObject.isTableMarkEditing = false;
                     $(classObject).find(classObject.selectors.tableSaveButton).addClass("d-none");
                     $(classObject).find(classObject.selectors.tableCancelButton).addClass("d-none");
-                    classObject.markEntryDataTable.ajax.reload(null, false);
+                     classObject.getMarkEntryList();
                 } else {
                     toastr.warning((response.successCount || 0) + " records saved. " + (response.failureCount || 0) + " records failed.");
                 }
